@@ -12,7 +12,7 @@ cc.Class({
 
 	properties: {},
 	onLoad() {
-		initialize();
+		this.initialize();
 	},
 	start() { },
 
