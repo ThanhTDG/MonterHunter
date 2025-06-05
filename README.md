@@ -1,3 +1,11 @@
+Để chạy dự án, bạn làm theo các bước sau:
+
+### 1. Cài đặt các package cần thiết
+Mở Terminal tại thư mục gốc dự án và chạy:
+```sh
+npm install
+```
+
 ### 1. Quy tắc đặt tên
 
 - **Folder:** PascalCase  
