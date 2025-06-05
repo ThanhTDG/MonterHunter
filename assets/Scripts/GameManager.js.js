@@ -69,7 +69,7 @@ export class SceneController {
 		this.state = new State({
 			init: STATE.LOADING,
 			transitions: [
-				{ name: TRANSITIONS.TO_LOADING, from: [STATE.LOBBY, STATE.BATTLE], to: STATE.LOBBY },
+				{ name: TRANSITIONS.TO_LOADING, from: [STATE.LOBBY, STATE.BATTLE], to: STATE.LOADING },
 				{ name: TRANSITIONS.TO_SCENE, from: STATE.LOADING, to: [STATE.LOBBY, STATE.BATTLE] },
 				{ name: TRANSITIONS.TO_EXIT, from: [STATE.LOBBY, STATE.BATTLE], to: STATE.EXIT },
 			],
@@ -82,6 +82,10 @@ export class SceneController {
 				}
 			},
 		});
+	}
+	finishLoadScene() {
+		let targetState = convertToCamelCase(this.targetScene);
+		this.state[targetState]()
 	}
 	handleOnToScene() {
 		this.loadScene(this.targetScene);

@@ -1,4 +1,5 @@
 const { SceneController } = require("../GameManager.js");
+const { convertToCamelCase } = require("../Utils/ConvertUtils.js");
 
 cc.Class({
     extends: cc.Component,
@@ -22,23 +23,20 @@ cc.Class({
     onLoadingScreen(progressBar, richText, textLoading) {
         const targetScene = SceneController.Instance.targetScene;
         const startTime = Date.now();
+        const targetState = convertToCamelCase(targetScene);
         richText.string = textLoading;
         cc.director.preloadScene(
             targetScene,
             (completedCount, totalCount, item) => {
                 const percent = completedCount / totalCount;
-                if (progressBar.progress > result) {
+                if (progressBar.progress > percent) {
                     return;
                 }
-                progressBar.progress = result;
+                progressBar.progress = percent;
             },
             (error, asset) => {
                 if (!error) {
-                    const elapsed = Date.now() - startTime;
-                    const wait = Math.max(0, minTimeLoadingMs - elapsed);
-                    setTimeout(() => {
-                        cc.director.loadScene(targetScene);
-                    }, wait);
+                    SceneController.Instance.finishLoadScene();
                     console.log(asset);
                 } else {
                     cc.error("Preload scene error:", error);
