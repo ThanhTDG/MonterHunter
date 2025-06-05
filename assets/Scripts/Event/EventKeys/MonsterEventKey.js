@@ -1,0 +1,3 @@
+export const END_WAVE = 'END_WAVE';
+export const COLLISION_ENDSCENE = "COLLISION_ENDSCENE";
+export const SPAWN_EFFECT = "SPAWN_EFFECT";
