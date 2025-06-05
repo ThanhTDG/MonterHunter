@@ -1,41 +1,49 @@
-// Learn cc.Class:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/class.html
-//  - [English] http://docs.cocos2d-x.org/creator/manual/en/scripting/class.html
-// Learn Attribute:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/reference/attributes.html
-//  - [English] http://docs.cocos2d-x.org/creator/manual/en/scripting/reference/attributes.html
-// Learn life-cycle callbacks:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/life-cycle-callbacks.html
-//  - [English] https://www.cocos2d-x.org/docs/creator/manual/en/scripting/life-cycle-callbacks.html
+const { SceneController } = require("../GameManager.js");
 
 cc.Class({
     extends: cc.Component,
 
     properties: {
-        // foo: {
-        //     // ATTRIBUTES:
-        //     default: null,        // The default value will be used only when the component attaching
-        //                           // to a node for the first time
-        //     type: cc.SpriteFrame, // optional, default is typeof default
-        //     serializable: true,   // optional, default is true
-        // },
-        // bar: {
-        //     get () {
-        //         return this._bar;
-        //     },
-        //     set (value) {
-        //         this._bar = value;
-        //     }
-        // },
+        progressBar: cc.ProgressBar,
+        loadingText: cc.RichText,
+        text: "LOADING...",
+    },
+    onLoad() {
+        this.initialize();
     },
 
-    // LIFE-CYCLE CALLBACKS:
-
-    // onLoad () {},
-
-    start () {
-
+    initialize() {
+        this.progressBar.progress = 0;
+        this.loadingText.string = "";
     },
-
-    // update (dt) {},
+    start() {
+        this.onLoadingScreen(this.progressBar, this.loadingText, this.text);
+    },
+    onLoadingScreen(progressBar, richText, textLoading) {
+        const targetScene = SceneController.Instance.targetScene;
+        const startTime = Date.now();
+        richText.string = textLoading;
+        cc.director.preloadScene(
+            targetScene,
+            (completedCount, totalCount, item) => {
+                const percent = completedCount / totalCount;
+                if (progressBar.progress > result) {
+                    return;
+                }
+                progressBar.progress = result;
+            },
+            (error, asset) => {
+                if (!error) {
+                    const elapsed = Date.now() - startTime;
+                    const wait = Math.max(0, minTimeLoadingMs - elapsed);
+                    setTimeout(() => {
+                        cc.director.loadScene(targetScene);
+                    }, wait);
+                    console.log(asset);
+                } else {
+                    cc.error("Preload scene error:", error);
+                }
+            }
+        );
+    },
 });
