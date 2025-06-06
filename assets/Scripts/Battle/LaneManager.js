@@ -6,9 +6,6 @@ cc.Class({
     },
 
     start() {
-        this.returnListSpawn();
-        this.lockedLane = [1, 2];
-        this.initLane()
     },
 
     initLane() {
@@ -19,7 +16,7 @@ cc.Class({
                 let sprite = this.laneList[laneIndex].getComponent(cc.Sprite);
 
                 if (sprite) {
-                    sprite.node.color = cc.Color.RED;
+                    sprite.node.color = cc.Color.BLACK;
                 }
             }
         }
@@ -31,7 +28,6 @@ cc.Class({
             let localPos = cc.v2(node.width / 2, Math.round(-node.height / 2) / 2);
 
             let worldPos = node.convertToWorldSpaceAR(localPos);
-            cc.log(worldPos);
             listSpawn.push(worldPos);
         }
         return listSpawn;
