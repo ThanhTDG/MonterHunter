@@ -159,7 +159,7 @@
       "__type__": "cc.Vec3",
       "x": 0,
       "y": 0,
-      "z": 367.19477120460203
+      "z": 364.5966949932487
     },
     "_scale": {
       "__type__": "cc.Vec3",
@@ -788,7 +788,7 @@
     "_is3DNode": false,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "5534ruIZFMvaSvoB2u/Vce"
+    "_id": "8efX6zxg9DiL+Mz+yf6Ge6"
   },
   {
     "__type__": "cc.Label",
@@ -820,7 +820,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "d7wSdFtrBCEpHB0E0TqKeH"
+    "_id": "64X4xPKnpEX70/Y/DgY4n2"
   },
   {
     "__type__": "cc.RichText",
@@ -907,7 +907,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "GameManager.js",
+    "_name": "GameManager",
     "_objFlags": 0,
     "_parent": {
       "__id__": 1
@@ -961,16 +961,16 @@
     "_skewY": 0,
     "_is3DNode": false,
     "groupIndex": 0,
-    "_id": "e8W1be5DNFaqrsztlHIzp5"
+    "_id": "08z6StmXtM0Y68WW2egX5h"
   },
   {
-    "__type__": "2a918s55PNDOKfnV2GP+m++",
+    "__type__": "67d21ND3u1APb8IXDY2IrMN",
     "_name": "",
     "_objFlags": 0,
     "node": {
       "__id__": 22
     },
     "_enabled": true,
-    "_id": "06JL7el1ZGGJ1PiGBKj37C"
+    "_id": "81EUOnPbpGLYzb00Krc7Uy"
   }
 ]
