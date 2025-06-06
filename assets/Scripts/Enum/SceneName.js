@@ -1,5 +1,5 @@
 export const SceneName = {
-    LOADING: 'Loading',
-    LOBBY: 'Lobby',
-    BATTLE: 'Battle',
-}
+	LOADING: "Loading",
+	LOBBY: "Lobby",
+	BATTLE: "Battle",
+};

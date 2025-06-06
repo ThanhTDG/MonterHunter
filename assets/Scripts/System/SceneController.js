@@ -1,8 +1,4 @@
-import Emitter from "../Event/Emitter";
-import { EnumValidate } from "../Utils/ValidatesUtils";
-
 const { SceneName } = require("../Enum/SceneName");
-const SceneEventKeys = require("../Event/EventKeys/SceneEventKeys");
 const StateController = require("javascript-state-machine");
 const STATE = {
 	LOADING: "loading",
@@ -20,7 +16,7 @@ export class SceneController {
 	constructor() {
 		this.initialize();
 	}
-	static get Instance() {
+	static get instance() {
 		if (!SceneController._instance) {
 			SceneController._instance = new SceneController();
 		}
@@ -31,57 +27,41 @@ export class SceneController {
 	}
 
 	initializeState() {
-		this.sceneState = new StateController({
+		this.state = new StateController({
 			init: STATE.LOADING,
 			transitions: [
 				{
-					name: TRANSITIONS.TO_LOADING,
-					from: [STATE.LOBBY, STATE.BATTLE],
+					name: TRANSITIONS.TO_LOBBY,
+					from: [STATE.LOADING, STATE.BATTLE],
 					to: STATE.LOADING,
 				},
 				{
-					name: TRANSITIONS.TO_LOBBY,
-					from: STATE.LOADING,
-					to: STATE.LOBBY,
-				},
-				{
 					name: TRANSITIONS.TO_BATTLE,
-					from: STATE.LOADING,
+					from: STATE.LOBBY,
 					to: STATE.BATTLE,
-				},
-				{
-					name: TRANSITIONS.TO_EXIT,
-					from: [STATE.LOBBY, STATE.BATTLE],
-					to: STATE.EXIT,
 				},
 			],
 			methods: {
-				onToBattle: this.handleOnToBattle.bind(this),
-				onToLoading: this.handleOnToLoading.bind(this),
-				onToLobby: this.handleOnToLobby.bind(this),
-				onToExit: () => { },
+				onToBattle: this.onToBattle.bind(this),
+				onToLobby: this.onToLobby.bind(this),
 			},
 		});
 	}
-	
 
-	handleOnToBattle() {
+	onToBattle() {
 		this.loadScene(SceneName.BATTLE);
 	}
-	handleOnToLoading() {
-		this.loadScene(SceneName.LOADING);
-	}
-	handleOnToLobby() {
+	onToLobby() {
 		this.loadScene(SceneName.LOBBY);
 	}
 	loadScene(sceneName) {
-		cc.director.loadScene(sceneName)
+		cc.director.loadScene(sceneName);
 	}
+
 	destroy() {
 		this.state = null;
 		this.mapEvent = null;
 		this.targetScene = null;
-		Emitter.instance.removeEventMap(this.mapEvent);
 		SceneController._instance = null;
 	}
 }
