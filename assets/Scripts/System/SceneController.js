@@ -8,19 +8,16 @@ const STATE = {
 	LOADING: "loading",
 	LOBBY: "lobby",
 	BATTLE: "battle",
-	EXIT: "exit",
 };
 const TRANSITIONS = {
 	TO_LOADING: "toLoading",
 	TO_BATTLE: "toBattle",
 	TO_LOBBY: "toLobby",
-	TO_EXIT: "toExit",
 };
 export class SceneController {
 	static _instance = null;
 
 	constructor() {
-		this.targetScene = SceneName.LOBBY;
 		this.initialize();
 	}
 	static get Instance() {
@@ -31,18 +28,10 @@ export class SceneController {
 	}
 	initialize() {
 		this.initializeState();
-		this.registerEvents();
-		this.setTransition(this.targetScene);
 	}
-	registerEvents() {
-		this.mapEvent = {
-			[SceneEventKeys.NEXT_SCENE]: this.nextScene.bind(this),
-			[SceneEventKeys.LOAD_SCENE]: this.loadScene.bind(this),
-		};
-		Emitter.instance.registerEventMap(this.mapEvent);
-	}
+
 	initializeState() {
-		this.state = new StateController({
+		this.sceneState = new StateController({
 			init: STATE.LOADING,
 			transitions: [
 				{
@@ -67,47 +56,28 @@ export class SceneController {
 				},
 			],
 			methods: {
-				onToBattle: this.handleOnToScene.bind(this),
-				onToLoading: this.handleOnToScene.bind(this),
-				onToLobby: this.handleOnToScene.bind(this),
-				onToExit: () => {},
+				onToBattle: this.handleOnToBattle.bind(this),
+				onToLoading: this.handleOnToLoading.bind(this),
+				onToLobby: this.handleOnToLobby.bind(this),
+				onToExit: () => { },
 			},
 		});
 	}
+	
 
-	handleOnToScene() {
-		this.loadScene();
+	handleOnToBattle() {
+		this.loadScene(SceneName.BATTLE);
 	}
-	loadScene() {
-		cc.director.loadScene(this.targetScene);
-		this.targetScene = null;
+	handleOnToLoading() {
+		this.loadScene(SceneName.LOADING);
 	}
-
-	nextScene(targetScene) {
-		if (!EnumValidate(SceneName, targetScene)) {
-			cc.error(`SceneController: Invalid scene name ${targetScene}`);
-			return;
-		}
-		if (!this.state.can(STATE.LOADING)) {
-			cc.error(
-				`SceneController: Cannot transition to loading state from ${this.state.current}`
-			);
-			return;
-		}
-		this.state.toLoading();
-		this.targetScene = targetScene;
-		this.setTransition(targetScene);
+	handleOnToLobby() {
+		this.loadScene(SceneName.LOBBY);
 	}
-	setTransition(sceneName) {
-		const transitionName = `to${sceneName}`;
-		this.transition = this.state.toLobby.bind(this);
-		this.transition1 = this.state[transitionName];
-		this.transition2 = this.state[transitionName].bind(this.state);
+	loadScene(sceneName) {
+		cc.director.loadScene(sceneName)
 	}
-	nextSceneLoaded() {
-		this.transition();
-	}
-	Destroy() {
+	destroy() {
 		this.state = null;
 		this.mapEvent = null;
 		this.targetScene = null;
