@@ -1,6 +1,6 @@
-module.exports = {
-    "DogMonster": "DogMonster",
-    "WolfMonster": "WolfMonster",
-    "DragonMonster": "DragonMonster",
-    "RobotMonster": "RobotMonster"
-};
+
+export const MonsterConfigType = cc.Enum({
+    DOGMONSTER: "DOGMONSTER",
+    WOLFMONSTER: "DOGMONSTER",
+    DRAGONMONSTER: "DOGMONSTER",
+});

@@ -1,9 +1,9 @@
 module.exports = [
     [
-        { type: "DogMonster", count: 10 }
+        { type: MonsterConfigType.DOGMONSTER, count: 10 }
     ],
     [
-        { type: "DogMonster", count: 15 },
+        { type: MonsterConfigType.DOGMONSTER, count: 15 },
         { type: "WolfMonster", count: 15 }
     ],
     [

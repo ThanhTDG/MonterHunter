@@ -3,6 +3,14 @@ const Emitter = require('Emitter');
 const StateMachine = require('javascript-state-machine');
 const { EntityGroup } = require('../Enum/EntityGroup');
 
+const MonsterState = {
+    IDLE: 'idle',
+    MOVING: 'moving',
+    ATTACKED: 'attacked',
+    COLLIDING: 'colliding',
+    DEAD: 'dead'
+};
+
 
 cc.Class({
     extends: cc.Component,
@@ -52,7 +60,7 @@ cc.Class({
         this.walking = cc.tween(this.node)
             .repeatForever(
                 cc.tween()
-                    .to({ x: -cc.winSize.width }))
+                    .to({ x: -100 }))
             .start();
 
         this.walkingTween = cc.tween(this.node)
@@ -69,7 +77,7 @@ cc.Class({
         this.walking = cc.tween(this.node)
             .repeatForever(
                 cc.tween()
-                    .by(1, { x: -cc.winSize.width }))
+                    .by(1, { x: -100 }))
             .start();
 
         this.walkingTween = cc.tween(this.node)
