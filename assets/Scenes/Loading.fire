@@ -788,7 +788,7 @@
     "_is3DNode": false,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "05IA6DQctCDZ7UxpkLovW2"
+    "_id": "8441dHzNFIjrj3zf7SwBwP"
   },
   {
     "__type__": "cc.Label",
@@ -820,7 +820,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "beH7hlNflJcKb7S9y4pR7n"
+    "_id": "79oDNE4HdKBo9bbStPHz1n"
   },
   {
     "__type__": "cc.RichText",

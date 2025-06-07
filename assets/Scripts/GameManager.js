@@ -4,6 +4,7 @@ const {
 	START_LOADING,
 	LOADING,
 } = require("./Event/EventKeys/LoadingEventKeys");
+const { EXIT } = require("./Event/EventKeys/SystemEventKeys");
 const { AudioPath } = require("./Sound/AudioConfigs");
 const { SoundController } = require("./Sound/SoundController");
 const { SceneController } = require("./System/SceneController");
@@ -16,7 +17,6 @@ cc.Class({
 	onLoad() {
 		this.initialize();
 	},
-	start() {},
 
 	initialize() {
 		cc.game.addPersistRootNode(this.node);
@@ -25,6 +25,7 @@ cc.Class({
 	registerEvents() {
 		this.eventMap = {
 			[START_LOADING]: this.startLoading.bind(this),
+			[EXIT]: this.terminate.bind(this),
 		};
 		Emitter.instance.registerEventMap(this.eventMap);
 	},
@@ -76,11 +77,12 @@ cc.Class({
 	emitLoading(percent) {
 		Emitter.instance.emit(LOADING, percent);
 	},
-
-	onDestroy() {
+	terminate() {
 		SoundController.instance.destroy();
 		SceneController.instance.destroy();
 		Emitter.instance.removeEventMap(this.eventMap);
 		Emitter.instance.destroy();
+		cc.game.removePersistRootNode(this.node);
+		this.node.destroy();
 	},
 });
