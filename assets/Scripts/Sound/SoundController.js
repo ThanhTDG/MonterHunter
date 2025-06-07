@@ -152,6 +152,10 @@ export class SoundController {
 		const audioItem = this.getAudioItem(key);
 		audioItem.setClip(clip);
 	}
+	getAudioClip(key) {
+		const audioItem = this.getAudioItem(key);
+		return audioItem.getClip();
+	}
 
 	stopAllSound() {
 		cc.audioEngine.stopAll();
@@ -161,8 +165,8 @@ export class SoundController {
 	}
 
 	destroy() {
-		this.configMap = {};
-		this.audioMap = {};
+		this.configMap = null;
+		this.audioMap = null;
 		cc.audioEngine.stopAll();
 		this.removeEvents();
 		SoundController._instance = null;

@@ -1,9 +1,6 @@
 const { SceneName } = require("./Enum/SceneName");
 const Emitter = require("./Event/Emitter");
-const {
-	START_LOADING,
-	LOADING,
-} = require("./Event/EventKeys/LoadingEventKeys");
+const loadingEventsKeys = require("./Event/EventKeys/LoadingEventKeys");
 const { EXIT } = require("./Event/EventKeys/SystemEventKeys");
 const { AudioPath } = require("./Sound/AudioConfigs");
 const { SoundController } = require("./Sound/SoundController");
@@ -24,7 +21,7 @@ cc.Class({
 	},
 	registerEvents() {
 		this.eventMap = {
-			[START_LOADING]: this.startLoading.bind(this),
+			[loadingEventsKeys.START_LOADING]: this.startLoading.bind(this),
 			[EXIT]: this.terminate.bind(this),
 		};
 		Emitter.instance.registerEventMap(this.eventMap);
@@ -70,19 +67,41 @@ cc.Class({
 		const percent = loadedCount / total;
 		this.emitLoading(percent);
 		if (loadedCount >= total) {
-			SceneController.instance.state.toLobby();
+			this.emitLoadingComplete();
 		}
+	},
+	emitLoadingComplete() {
+		const loadedCallback = () => {
+			SceneController.instance.loadScene(SceneName.LOBBY);
+		};
+		Emitter.instance.emit(loadingEventsKeys.LOADING_COMPLETE, loadedCallback);
 	},
 
 	emitLoading(percent) {
-		Emitter.instance.emit(LOADING, percent);
+		Emitter.instance.emit(loadingEventsKeys.LOADING, percent);
 	},
-	terminate() {
+	releaseSounds() {
+		const sounds = Object.keys(AudioPath);
+		sounds.forEach((key) => {
+			const path = AudioPath[key];
+			const clip = SoundController.instance.getAudioClip(key);
+			if (clip) {
+				cc.loader.releaseAsset(clip);
+				SoundController.instance.setAudioClip(key, null);
+			}
+		});
 		SoundController.instance.destroy();
-		SceneController.instance.destroy();
+	},
+	releaseEvents() {
 		Emitter.instance.removeEventMap(this.eventMap);
 		Emitter.instance.destroy();
+	},
+
+	terminate() {
+		SceneController.instance.destroy();
+		this.releaseSounds();
+		this.releaseEvents();
 		cc.game.removePersistRootNode(this.node);
-		this.node.destroy();
+		cc.director.loadScene("Portal");
 	},
 });

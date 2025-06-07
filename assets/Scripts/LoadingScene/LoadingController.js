@@ -23,8 +23,13 @@ cc.Class({
 	registerEvents() {
 		this.eventMap = {
 			[LoadingEventKeys.LOADING]: this.setProgress.bind(this),
+			[LoadingEventKeys.LOADING_COMPLETE]: this.onLoadingComplete.bind(this),
 		};
 		Emitter.instance.registerEventMap(this.eventMap);
+	},
+	onLoadingComplete(loadedCallback) {
+		this.progressBar.progress = 1;
+		loadedCallback();
 	},
 	emitStartLoading() {
 		Emitter.instance.emit(LoadingEventKeys.START_LOADING);

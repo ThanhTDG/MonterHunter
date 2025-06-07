@@ -1,3 +1,5 @@
+const Emitter = require("../Event/Emitter");
+
 const { SceneName } = require("../Enum/SceneName");
 const StateController = require("javascript-state-machine");
 const STATE = {
@@ -59,8 +61,11 @@ export class SceneController {
 	}
 
 	destroy() {
+		if (this.eventMap) {
+			Emitter.instance.removeEventMap(this.eventMap);
+		}
 		this.state = null;
-		this.mapEvent = null;
+		this.eventMap = null;
 		this.targetScene = null;
 		SceneController._instance = null;
 	}
