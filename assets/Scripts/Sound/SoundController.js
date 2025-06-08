@@ -1,5 +1,7 @@
+import { loadAudioClip } from "../Utils/FileUtils";
+
 const { AudioItem } = require("./AudioItem");
-const { AudioKey } = require("./AudioConfigs");
+const { AudioKey, AudioPath } = require("./AudioConfigs");
 const { SoundConfigType: ConfigType } = require("../Enum/SoundConfigType");
 const { SoundConfigValidator, SoundConfigItem } = require("./SoundConfigItem");
 const EventKey = require("../Event/EventKeys/SoundEventKeys");
@@ -42,8 +44,18 @@ export class SoundController {
 		};
 		Emitter.instance.registerEventMap(this.eventMap);
 	}
-	removeEvents() {
-		Emitter.instance.removeEventMap(this.eventMap);
+
+	preLoad(onLoaded) {
+		const files = Object.keys(AudioPath);
+		files.forEach((key) => {
+			const name = AudioPath[key];
+			loadAudioClip(name, (audioClip) => {
+				this.setAudioClip(key, audioClip);
+				onLoaded();
+			});
+		});
+		const total = files.length;
+		return total;
 	}
 
 	playSound(audioKey, loop = false) {
@@ -150,6 +162,9 @@ export class SoundController {
 
 	setAudioClip(key, clip) {
 		const audioItem = this.getAudioItem(key);
+		if (audioItem.getClip() !== null) {
+			cc.loader.releaseAsset(audioItem.getClip());
+		}
 		audioItem.setClip(clip);
 	}
 	getAudioClip(key) {
@@ -164,11 +179,26 @@ export class SoundController {
 		});
 	}
 
+	releaseSounds() {
+		const files = Object.keys(AudioPath);
+		files.forEach((key) => {
+			const clip = this.getAudioClip(key);
+			if (clip) {
+				cc.loader.releaseAsset(clip);
+				this.setAudioClip(key, null);
+			}
+		});
+	}
+	removeEvents() {
+		Emitter.instance.removeEventMap(this.eventMap);
+	}
+
 	destroy() {
 		this.configMap = null;
 		this.audioMap = null;
 		cc.audioEngine.stopAll();
 		this.removeEvents();
+		this.releaseSounds();
 		SoundController._instance = null;
 	}
 }

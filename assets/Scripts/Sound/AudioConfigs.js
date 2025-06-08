@@ -7,7 +7,7 @@ export const AudioKey = {
 	[Key.COIN]: ConfigType.Effect,
 };
 export const AudioPath = {
-	[Key.MUSIC]: "Sounds/bgm",
-	[Key.CLICK]: "Sounds/click",
-	[Key.COIN]: "Sounds/coin_counting",
+	[Key.MUSIC]: "bgm",
+	[Key.CLICK]: "click",
+	[Key.COIN]: "coin_counting",
 };
