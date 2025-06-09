@@ -1,0 +1,1 @@
+export const REMOVE_BULLET = 'REMOVE_BULLET';

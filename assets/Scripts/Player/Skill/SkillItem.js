@@ -1,0 +1,70 @@
+cc.Class({
+    extends: cc.Component,
+
+    properties: {
+        cooldownTime: 5,
+        cooldownLabel: cc.Label,
+    },
+
+    onLoad() {
+        this.progressBar = this.getComponent(cc.ProgressBar);
+        this.button = this.getComponent(cc.Button);
+
+        this.cooldownLabel.node.active = false;
+        this.isCooldown = false;
+        this.remainingTime = 0;
+
+        this.button.node.on('click', this.activateSkill, this);
+    },
+
+    activateSkill() {
+        if (this.isCooldown) {
+            cc.log("Skill is on cooldown!");
+            return;
+        }
+
+        this.onSkillActivated();
+        this.startCooldown();
+    },
+
+    onSkillActivated() {
+        cc.log("Skill activated!");
+    },
+
+    startCooldown() {
+        this.isCooldown = true;
+        this.remainingTime = this.cooldownTime;
+
+        this.progressBar.progress = 0;
+        this.cooldownLabel.string = this.remainingTime.toFixed(1);
+        this.cooldownLabel.node.active = true;
+        this.node.opacity = 100;
+
+        this.schedule(this.updateCooldown, 0.1);
+    },
+
+updateCooldown(dt) {
+    if (this.remainingTime > 0) {
+        this.remainingTime -= dt;
+
+        if (this.remainingTime < 0) this.remainingTime = 0;
+
+        const progress = 1 - this.remainingTime / this.cooldownTime;
+        this.progressBar.progress = progress;
+
+        this.cooldownLabel.string = this.remainingTime.toFixed(1);
+        this.node.opacity = 100;
+
+    } else {
+        this.isCooldown = false;
+
+        this.progressBar.progress = 1;
+        this.cooldownLabel.node.active = false;
+
+        this.node.opacity = 255;
+
+        this.unschedule(this.updateCooldown);
+    }
+}
+
+});

@@ -1,6 +1,6 @@
 {
   "ver": "2.3.3",
-  "uuid": "326189bf-7c6c-4047-9c4f-39cb961b0ae3",
+  "uuid": "301086b2-2c25-4734-8311-cedb1e315ba7",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -9,10 +9,10 @@
   "packable": true,
   "platformSettings": {},
   "subMetas": {
-    "WingBadge_Side_Whig_Right": {
+    "StageFrame_03_Single_Focus": {
       "ver": "1.0.4",
-      "uuid": "dcc67b17-98b5-4f5c-94a9-ee0958d4a96d",
-      "rawTextureUuid": "326189bf-7c6c-4047-9c4f-39cb961b0ae3",
+      "uuid": "007477d9-36bd-4f5f-a3c3-dbfd76f3e385",
+      "rawTextureUuid": "301086b2-2c25-4734-8311-cedb1e315ba7",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,
@@ -20,14 +20,14 @@
       "offsetY": 0,
       "trimX": 0,
       "trimY": 0,
-      "width": 247,
-      "height": 313,
-      "rawWidth": 247,
-      "rawHeight": 313,
-      "borderTop": 0,
-      "borderBottom": 0,
-      "borderLeft": 0,
-      "borderRight": 0,
+      "width": 366,
+      "height": 326,
+      "rawWidth": 366,
+      "rawHeight": 326,
+      "borderTop": 77,
+      "borderBottom": 57,
+      "borderLeft": 79,
+      "borderRight": 58,
       "subMetas": {}
     }
   }
