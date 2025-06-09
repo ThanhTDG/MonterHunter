@@ -1,41 +1,38 @@
 cc.Class({
     extends: cc.Component,
 
-    properties: {},
+    properties: {
+        monsterFactory: require('MonsterFactory'),
+    },
 
-    onLoad() {
+    init(monsterLayer, lanePosList) {
+        this.monsterLayer = monsterLayer;
+        this.lanePosList = lanePosList;
         this.monsters = {};
     },
 
-    add(monster) {
-        this.monsters[monster.id] = monster;
+    spawnMonster(monsterData) {
+        const y = this.getRandomLaneY();
+        const pos = cc.v2(cc.winSize.width + 150, y);
+        const monster = this.monsterFactory.create(monsterData, this.monsterLayer, pos);
+        this.monsters[monsterData.id] = monster;
+    },
+
+    getRandomLaneY() {
+        const index = Math.floor(Math.random() * this.lanePosList.length);
+        return this.lanePosList[index];
     },
 
     remove(id) {
-        const monsterNode = this.monsters[id];
-        if (!monsterNode) return;
-
-        const script = monsterNode.getComponent("MonsterBase");
-        if (script && script.stopAllTweens) {
-            script.stopAllTweens();
+        if (this.monsters[id]) {
+            this.monsters[id].destroy();
+            delete this.monsters[id];
         }
-
-        monsterNode.destroy();
-        delete this.monsters[id];
-    },
-
-    getAll() {
-        return Object.values(this.monsters);
     },
 
     clearAll() {
         for (let id in this.monsters) {
-            const monsterNode = this.monsters[id];
-            const script = monsterNode.getComponent("MonsterBase");
-            if (script && script.stopAllTweens) {
-                script.stopAllTweens();
-            }
-            monsterNode.destroy();
+            this.monsters[id].destroy();
         }
         this.monsters = {};
     }

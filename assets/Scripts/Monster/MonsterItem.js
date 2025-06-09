@@ -1,182 +1,228 @@
 const EventKey = require('MonsterEventKey');
 const Emitter = require('Emitter');
 const StateMachine = require('javascript-state-machine');
+const MonsterState = require('MonsterState');
 const { EntityGroup } = require('../Enum/EntityGroup');
-
 
 cc.Class({
     extends: cc.Component,
 
     properties: {
         healthBar: cc.ProgressBar,
+        spriteNode: cc.Node,
         maxHealth: 100,
         currentHealth: 100,
-        amount: 100,
+        damage: 50,
+    },
+
+    onLoad() {
+        this.lastAttackTime = 0;
+        this.canAttack = false;
+        this.attackCallback = null;
+        this.hitOnlyTimer = null;
+
+        this.attackPlayer = this.attackPlayer.bind(this);
     },
 
     init(level = 1) {
-        this.type = "";
-        this.id = "";
         this.maxHealth = 100 * level;
         this.currentHealth = this.maxHealth;
         this.healthBar.progress = 1;
-
+        this.level = level;
         this.initFSM();
-        this.fsm.onStartMoving();
+
+        this.scheduleOnce(() => {
+            if (this.fsm.can(MonsterState.Transition.START_MOVING)) {
+                this.fsm[MonsterState.Transition.START_MOVING]();
+            }
+        }, 1.5);
     },
 
     initFSM() {
         this.fsm = new StateMachine({
-            init: 'idle',
+            init: MonsterState.State.IDLE,
             transitions: [
-                { name: 'startMoving', from: 'idle', to: 'moving' },
-                { name: 'getAttacked', from: ['idle','moving'], to: 'attacked' },
-                { name: 'resumeMove', from: 'attacked', to: 'moving' },
-                { name: 'collidePlayer', from: ['idle','moving', 'attacked'], to: 'colliding' },
-                { name: 'die', from: ['idle','moving', 'attacked', 'colliding'], to: 'dead' }
+                { name: MonsterState.Transition.START_MOVING, from: MonsterState.State.IDLE, to: MonsterState.State.MOVING },
+                { name: MonsterState.Transition.GET_HIT, from: MonsterState.State.MOVING, to: MonsterState.State.HIT },
+                { name: MonsterState.Transition.RESUME, from: MonsterState.State.HIT, to: MonsterState.State.MOVING },
+                { name: MonsterState.Transition.DIE, from: [MonsterState.State.MOVING, MonsterState.State.HIT], to: MonsterState.State.DEAD }
             ],
             methods: {
-                onStartMoving: () => this.onStartMoving(),
-                onEnterMoving: () => this.onEnterMoving(),
-                onEnterAttacked: () => this.onEnterAttacked(),
-                onEnterColliding: () => this.onEnterColliding(),
-                onEnterDead: () => this.onEnterDead()
+                onEnterMoving: () => this.startWalking(),
+                onEnterHit: () => this.pauseWalking(),
+                onEnterDead: () => this.handleDeath(),
             }
         });
     },
 
-    // === MOVING STATE ===
-    onEnterMoving() {
-        // this.stopTweens();
+    startWalking() {
+        this.moveTween = cc.tween(this.node)
+            .by(7, { x: -cc.winSize.width - 600 })
+            .call(() => {
+                if (this.fsm.can(MonsterState.Transition.DIE)) {
+                    this.fsm[MonsterState.Transition.DIE]();
+                }
+            })
+            .start();
 
-        this.walking = cc.tween(this.node)
+        this.bounceTween = cc.tween(this.node)
             .repeatForever(
                 cc.tween()
-                    .to({ x: -cc.winSize.width }))
-            .start();
-
-        this.walkingTween = cc.tween(this.node)
-            .repeatForever(
-                cc.tween()
-                    .by(0.1, { y: 10 })
-                    .by(0.1, { y: -10 }))
+                    .by(0.3, { y: 5 })
+                    .by(0.3, { y: -5 })
+            )
             .start();
     },
 
-    onStartMoving() {
-        this.stopTweens();
-
-        this.walking = cc.tween(this.node)
-            .repeatForever(
-                cc.tween()
-                    .by(1, { x: -cc.winSize.width }))
-            .start();
-
-        this.walkingTween = cc.tween(this.node)
-            .repeatForever(
-                cc.tween()
-                    .by(0.25, { y: 10 })
-                    .by(0.25, { y: -10 }))
-            .start();
-    },
-
-    // === ATTACKED STATE ===
-    onEnterAttacked() {
-        this.stopTweens();
-
-        console.log('attack');
-        // Đứng lại 0.5s rồi tiếp tục di chuyển
-        this.scheduleOnce(() => {
-            if (this.fsm.can('resumeMove'))
-                this.fsm.resumeMove();
-        }, 0.5);
-    },
-
-    // === COLLIDING STATE ===
-    onEnterColliding() {
-        this.stopTweens();
-
-        console.log('va chạm player');
-        //Hiệu ứng tấn công: ví dụ giật nhẹ node
-        this.attackEffect = cc.tween(this.node)
-            .repeatForever(cc.tween()
-                .by(0.1, { x: 5 })
-                .by(0.1, { x: -5 }))
-            .start();
-    },
-
-    // === DEAD STATE ===
-    onEnterDead() {
-        this.stopTweens();
-
-        console.log('dead');
-        cc.tween(this.node)
-            .to(0.3, { scale: 0, opacity: 0 })
-            .call(() => this.node.destroy())
-            .start();
-    },
-
-    // === UTILS ===
-    stopTweens() {
-        if (this.walkingTween) {
-            this.walkingTween.stop();
-            this.walkingTween = null;
+    pauseWalking() {
+        if (this.moveTween) {
+            this.moveTween.stop();
+            this.moveTween = null;
         }
-        if (this.walking) {
-            this.walking.stop();
-            this.walking = null;
-        }
-        if (this.attackEffect) {
-            this.attackEffect.stop();
-            this.attackEffect = null;
+        if (this.bounceTween) {
+            this.bounceTween.stop();
+            this.bounceTween = null;
         }
     },
 
-    takeDamage(amount) {
-        if (this.fsm.is('dead')) return;
+    resumeWalking() {
+        if (this.fsm.can(MonsterState.Transition.RESUME)) {
+            this.fsm[MonsterState.Transition.RESUME]();
+        }
+        if (!this.bounceTween) {
+            this.bounceTween = cc.tween(this.node)
+                .repeatForever(
+                    cc.tween()
+                        .by(0.3, { y: 5 })
+                        .by(0.3, { y: -5 })
+                )
+                .start();
+        }
+    },
+
+    takeDamageMonster(amount) {
+        if (this.fsm.is(MonsterState.State.DEAD)) return;
 
         this.currentHealth -= amount;
-        if (this.currentHealth < 0) this.currentHealth = 0;
         this.healthBar.progress = this.currentHealth / this.maxHealth;
 
-        if (this.currentHealth <= 0 && this.fsm.can('die')) {
-            this.fsm.die();
-        } else if (this.fsm.can('getAttacked')) {
-            this.fsm.getAttacked();
+        if (this.currentHealth <= 0) {
+            if (this.fsm.can(MonsterState.Transition.DIE)) {
+                this.fsm[MonsterState.Transition.DIE]();
+            }
+        } else {
+            this.handleHitByBullet();
         }
     },
 
-    onCollisionEnter(other, self) {
-        if (this.fsm.is('dead')) return;
-        if (this.fsm.can('getAttacked')) this.fsm.getAttacked();
+    handleHitByBullet() {
+        this.flashRedEffect();
 
-        if (other.node.group === EntityGroup.BULLET) {
-            this.takeDamage(this.amount);
-
-            const pos = self.node.position;
-            const worldPos = self.node.parent.convertToWorldSpaceAR(pos);
-
-            const infoCollision = {
-                'hpProgress': this.healthBar.progress,
-                'id': this.id,
-                'type': this.type,
-                'maxHealth': this.maxHealth,
-                'currentHealth': this.currentHealth,
-                'amount': this.amount,
-                'pos': pos,
-                'worldPos': worldPos,
+        if (this.canAttack) {
+            if (this.fsm.can(MonsterState.Transition.GET_HIT)) {
+                this.fsm[MonsterState.Transition.GET_HIT]();
             }
-            Emitter.instance.emit(EventKey.SPAWN_EFFECT, infoCollision);
+            return;
+        }
+
+        if (this.fsm.can(MonsterState.Transition.GET_HIT)) {
+            this.fsm[MonsterState.Transition.GET_HIT]();
+
+            if (this.hitOnlyTimer) {
+                this.unschedule(this.hitOnlyTimer);
+                this.hitOnlyTimer = null;
+            }
+
+            this.hitOnlyTimer = () => {
+                this.resumeWalking();
+                this.hitOnlyTimer = null;
+            };
+            this.scheduleOnce(this.hitOnlyTimer, 1);
+        }
+    },
+
+    flashRedEffect() {
+        cc.tween(this.spriteNode)
+            .to(0.1, { color: cc.Color.RED })
+            .to(0.1, { color: cc.Color.WHITE })
+            .start();
+
+    },
+
+    handleDeath() {
+        this.stopAttacking();
+
+        Emitter.instance.emit(EventKey.MONSTER_DIED); // sự kiện bị kill
+
+        if (this.moveTween) {
+            this.moveTween.stop();
+        }
+        if (this.bounceTween) {
+            this.bounceTween.stop();
+        }
+
+        cc.tween(this.node)
+            .to(0.5, { opacity: 0, y: this.node.y + 50 })
+            .call(() => {
+                this.node.destroy();
+            })
+            .start();
+    },
+
+    attackPlayer() {
+        if (!this.canAttack || this.fsm.is(MonsterState.State.DEAD)) return;
+
+        Emitter.instance.emit(EventKey.PLAYER_ATTACKED, { // sự kiện đánh player
+            monsterId: this.id,
+            damage: this.damage,
+            type: this.type
+        });
+
+        cc.tween(this.node)
+            .to(0.1, { scale: 1.2 })
+            .to(0.1, { scale: 1.0 })
+            .start();
+    },
+
+    stopAttacking() {
+        if (this.attackCallback) {
+            this.unschedule(this.attackCallback);
+            this.attackCallback = null;
+        }
+    },
+
+    onCollisionEnter(other) {
+        if (other.node.group === EntityGroup.BULLET) {
+            this.handleHitByBullet();
         }
 
         if (other.node.group === EntityGroup.PLAYER) {
-            if (this.fsm.can('collidePlayer')) this.fsm.collidePlayer();
+            if (!this.canAttack) {
+                this.canAttack = true;
+
+                if (this.fsm.can(MonsterState.Transition.GET_HIT)) {
+                    this.fsm[MonsterState.Transition.GET_HIT]();
+                }
+
+                this.attackPlayer();
+
+                this.attackCallback = this.attackPlayer;
+                this.schedule(this.attackCallback, 1.3);
+            }
         }
 
         if (other.node.group === EntityGroup.BOUNDARY) {
-            Emitter.instance.emit(EventKey.COLLISION_ENDSCENE);
-            console.log('die');
-            if (this.fsm.can('die')) this.fsm.die();
+            this.stopAttacking();
+            this.node.destroy();
+            Emitter.instance.emit(EventKey.MONSTER_END);
         }
-    }
+    },
+
+    onCollisionExit(other) {
+        if (other.node.group === EntityGroup.PLAYER) {
+            this.canAttack = false;
+            this.stopAttacking();
+            this.resumeWalking();
+        }
+    },
 });
