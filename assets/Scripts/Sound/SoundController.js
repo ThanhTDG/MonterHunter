@@ -121,8 +121,7 @@ export class SoundController {
 		return this.audioMap[audioKey];
 	}
 
-	setConfig(config) {
-		const { type } = config;
+	setConfig(type, config) {
 		this.configMap[type] = config;
 		this.updateVolume(type);
 	}
