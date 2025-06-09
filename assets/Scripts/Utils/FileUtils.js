@@ -26,6 +26,10 @@ export const loadAudioClip = (name, callback) => {
 export const loadAudioClips = (path, callback) => {
 	loadDirectory(path, callback, cc.AudioClip);
 };
+export const loadPrefab = (path, callback) => {
+	path = "Prefabs/" + path;
+	loadAsset(path, callback, cc.Prefab);
+};
 
 export const loadPrefabs = (path, callback) => {
 	path = "Prefabs/" + path;

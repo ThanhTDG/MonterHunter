@@ -33,9 +33,12 @@ cc.Class({
 			loadedCount++;
 			this.handleLoading(loadedCount, totalAssets);
 		};
+		const onTotal = (amount) => {
+			totalAssets += amount;
+		}
 		totalAssets += SoundController.instance.preLoad(checkLoaded);
 		totalAssets += SceneController.instance.preLoad(checkLoaded);
-		totalAssets += this.popupController.preLoad(checkLoaded);
+		this.popupController.preLoad(checkLoaded, onTotal);
 	},
 
 	handleLoading(loadedCount, total) {

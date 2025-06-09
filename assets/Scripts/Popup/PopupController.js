@@ -3,10 +3,12 @@ const PopupEventKeys = require("../Event/EventKeys/PopupEventKeys");
 const Emitter = require("../Event/Emitter");
 const PopupItem = require("./PopupItem");
 const { loadPrefabs } = require("../Utils/FileUtils");
+
 cc.Class({
 	extends: cc.Component,
 
-	properties: {},
+	properties: {
+	},
 
 	onLoad() {
 		this.initializeSetup();
@@ -14,24 +16,62 @@ cc.Class({
 	onDestroy() {
 		this.cleanup();
 	},
-	preLoad(onLoaded) {
-		const nameFolder = "Popup";
-		let total = 0;
-		loadPrefabs(nameFolder, (prefabs) => {
-			total = prefabs.length;
+	preLoad(onLoaded, onTotal) {
+		this.preloadPopups(onLoaded, onTotal);
+	},
+	initializeSetup() {
+		this.openStack = [];
+		this.popupMap = {};
+		this.registerEvents();
+		cc.game.addPersistRootNode(this.node);
+		this.centerOnScreen();
+	},
+	showPopup(type) {
+
+		if (this.isPopupOpen(type)) {
+			return;
+		}
+		const popup = this.popupMap[type];
+		popup.show();
+		this.openStack.push(type);
+		console.log(this)
+	},
+	hideTopPopup(type) {
+		let index = this.openStack.indexOf(type);
+		if (index === -1) {
+			throw new Error(`PopupController: hidePopup() - Popup of type ${type} is not open.`);
+		}
+		const isLast = index + 1 === this.openStack.length;
+		if (!isLast) {
+			throw new Error(`PopupController: hidePopup() - Popup of type ${type} is not the last one in the stack.`);
+		}
+		this.hidePopup(type);
+	},
+	hidePopup(type) {
+		const popup = this.popupMap[type];
+		popup.hide();
+		removeItemFromList(this.openStack, (itemType) => itemType === type);
+	},
+	preloadPopups(onLoaded, onTotal) {
+		const path = "Popup";
+		loadPrefabs(path, (prefabs) => {
+			if (onTotal) {
+				onTotal(prefabs.length);
+			}
 			prefabs.forEach((prefab) => {
 				this.addPopup(prefab);
 				onLoaded();
 			});
 		});
-		return total;
 	},
-	initializeSetup() {
-		this.openStack = [];
-		this.popupList = [];
-		this.registerEvents();
-		cc.game.addPersistRootNode(this.node);
-		this.centerOnScreen();
+	addPopup(popupPrefab) {
+		const node = cc.instantiate(popupPrefab);
+		const item = node.getComponent(PopupItem);
+		if (item) {
+			this.node.addChild(node);
+			this.popupMap[item.popupType] = item;
+
+		}
 	},
 	centerOnScreen() {
 		const canvas = cc.director.getScene().getChildByName("Canvas");
@@ -41,58 +81,23 @@ cc.Class({
 	registerEvents() {
 		this.eventMap = {
 			[PopupEventKeys.SHOW_POPUP]: this.showPopup.bind(this),
-			[PopupEventKeys.HIDE_POPUP]: this.hidePopup.bind(this),
+			[PopupEventKeys.FORCE_HIDE_POPUP]: this.hidePopup.bind(this),
+			[PopupEventKeys.HIDE_POPUP]: this.hideTopPopup.bind(this),
 			[PopupEventKeys.HIDE_ALL_POPUPS]: this.hideAllPopups.bind(this),
 		};
 		Emitter.instance.registerEventMap(this.eventMap);
 	},
-	showPopup(type) {
-		if (this.isPopupOpen(type)) {
-			return;
-		}
-		const showPopupFound = (popup) => {
-			popup.show();
-			this.openStack.push(popup);
-		};
-		findItemInList(
-			this.popupList,
-			(popup) => popup.popupType === type,
-			(popupFound) => showPopupFound(popupFound)
-		);
-	},
+
 	isPopupOpen(type) {
-		return this.openStack.some((popup) => popup.popupType === type);
-	},
-	hidePopup(type) {
-		removeItemFromList(
-			this.openStack,
-			(popup) => popup.popupType === type,
-			(popupFound) => popupFound.hide()
-		);
+		return this.openStack.includes(type);
 	},
 	hideAllPopups() {
-		this.openStack.forEach((popup) => popup.hide());
-		this.openStack = [];
-	},
-	addPopup(popupPrefab) {
-		const item = this.createFromPrefab(popupPrefab);
-		this.node.addChild(item.node);
-		this.popupList.push(item);
-	},
-	createFromPrefab(popupPrefab) {
-		const node = cc.instantiate(popupPrefab);
-		const item = node.getComponent(PopupItem);
-		if (!item) {
-			cc.error("PopupItem component not found on the prefab.");
-			return null;
-		}
-		return item;
+		this.openStack.forEach((popupType) => this.hidePopup(popupType));
 	},
 	cleanup() {
 		Emitter.instance.removeEventMap(this.eventMap);
-		this.openStack.forEach((popup) => popup.destroy());
-		this.openStack = null;
-		this.popupList = null;
+		this.openStack = [];
+		this.popupMap = {};
 		this.eventMap = null;
 		this.node.destroyAllChildren();
 		cc.game.removePersistRootNode(this.node);
