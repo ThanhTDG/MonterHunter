@@ -8,26 +8,32 @@ cc.Class({
         Lanes: cc.Node,
     },
 
-    onLoad() {
-        this.eventMap = {
-            [PlayerEventKey.PLAYER_INIT]: this.sendLine.bind(this),
-        };
-        Emitter.instance.registerEventMap(this.eventMap);
-        this.listLane = this.Lanes.getComponent('LaneManager').returnListSpawn();
-    },
-
     start() {
+        this.init();
+    },
+
+    init() {
+        this.listLane = this.Lanes.getComponent('LaneManager').returnListSpawn();
+        cc.director.getCollisionManager().enabled = true;
+        this.initPlayerData();
 
     },
 
-    sendLine() {
-        cc.log('send line');
-        Emitter.instance.emit(BattleEventKey.SEND_LINE, this.listLane);
+    initPlayerData() {
+        const playerData = {
+            hp: 100,
+            damage: 20,
+            shootSpeed: 0.5,
+            moveSpeed: 500,
+        };
+        this.sendInitEvent(playerData);
+
+
     },
 
-    onDestroy() {
-        Emitter.instance.removeEventMap(this.eventMap);
-    }
+    sendInitEvent(playerData) {
+        Emitter.instance.emit(PlayerEventKey.PLAYER_INIT, { playerData, listLane: this.listLane });
+    },
 
 
 });
