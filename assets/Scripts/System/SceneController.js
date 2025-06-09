@@ -25,8 +25,11 @@ export class SceneController {
 		return SceneController._instance;
 	}
 
-	preLoad(onLoaded) {
+	preLoad(onLoaded, onTotal) {
 		const names = Object.values(SceneName);
+		if (onTotal) {
+			onTotal(names.length);
+		}
 		names.forEach((sceneName) => {
 			cc.director.preloadScene(sceneName, null, (error, asset) => {
 				if (!error) {
@@ -36,8 +39,6 @@ export class SceneController {
 				}
 			});
 		});
-		const total = names.length;
-		return total;
 	}
 
 	initialize() {
