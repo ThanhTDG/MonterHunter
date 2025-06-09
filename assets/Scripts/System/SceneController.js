@@ -24,6 +24,22 @@ export class SceneController {
 		}
 		return SceneController._instance;
 	}
+
+	preLoad(onLoaded) {
+		const names = Object.values(SceneName);
+		names.forEach((sceneName) => {
+			cc.director.preloadScene(sceneName, null, (error, asset) => {
+				if (!error) {
+					onLoaded();
+				} else {
+					cc.error(`Preload scene error for ${sceneName}:`, error);
+				}
+			});
+		});
+		const total = names.length;
+		return total;
+	}
+
 	initialize() {
 		this.initializeState();
 	}

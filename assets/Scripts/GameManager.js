@@ -2,15 +2,15 @@ const { SceneName } = require("./Enum/SceneName");
 const Emitter = require("./Event/Emitter");
 const loadingEventsKeys = require("./Event/EventKeys/LoadingEventKeys");
 const { EXIT } = require("./Event/EventKeys/SystemEventKeys");
-const { AudioPath } = require("./Sound/AudioConfigs");
 const { SoundController } = require("./Sound/SoundController");
 const { SceneController } = require("./System/SceneController");
 
-const { loadAudioClip } = require("./Utils/FileUtils");
 cc.Class({
 	extends: cc.Component,
 
-	properties: {},
+	properties: {
+		popupController: require("./Popup/PopupController"),
+	},
 	onLoad() {
 		this.initialize();
 	},
@@ -33,34 +33,12 @@ cc.Class({
 			loadedCount++;
 			this.handleLoading(loadedCount, totalAssets);
 		};
-		totalAssets += this.preLoadSound(checkLoaded);
-		totalAssets += this.preLoadScene(checkLoaded);
-	},
-
-	preLoadScene(onLoaded) {
-		const names = Object.values(SceneName);
-		names.forEach((sceneName) => {
-			cc.director.preloadScene(sceneName, null, (error, asset) => {
-				if (!error) {
-					onLoaded();
-				} else {
-					cc.error(`Preload scene error for ${sceneName}:`, error);
-				}
-			});
-		});
-		return names.length;
-	},
-
-	preLoadSound(onLoaded) {
-		const sounds = Object.keys(AudioPath);
-		sounds.forEach((key) => {
-			const path = AudioPath[key];
-			loadAudioClip(path, key, (clip) => {
-				SoundController.instance.setAudioClip(key, clip);
-				onLoaded();
-			});
-		});
-		return sounds.length;
+		const onTotal = (amount) => {
+			totalAssets += amount;
+		}
+		totalAssets += SoundController.instance.preLoad(checkLoaded);
+		totalAssets += SceneController.instance.preLoad(checkLoaded);
+		this.popupController.preLoad(checkLoaded, onTotal);
 	},
 
 	handleLoading(loadedCount, total) {
@@ -80,27 +58,20 @@ cc.Class({
 	emitLoading(percent) {
 		Emitter.instance.emit(loadingEventsKeys.LOADING, percent);
 	},
-	releaseSounds() {
-		const sounds = Object.keys(AudioPath);
-		sounds.forEach((key) => {
-			const path = AudioPath[key];
-			const clip = SoundController.instance.getAudioClip(key);
-			if (clip) {
-				cc.loader.releaseAsset(clip);
-				SoundController.instance.setAudioClip(key, null);
-			}
-		});
-		SoundController.instance.destroy();
-	},
-	releaseEvents() {
+
+	removeEvents() {
 		Emitter.instance.removeEventMap(this.eventMap);
+	},
+	releaseInstances() {
+		SceneController.instance.destroy();
+		SoundController.instance.destroy();
+		this.popupController.destroy();
 		Emitter.instance.destroy();
 	},
 
 	terminate() {
-		SceneController.instance.destroy();
-		this.releaseSounds();
-		this.releaseEvents();
+		this.removeEvents();
+		this.releaseInstances();
 		cc.game.removePersistRootNode(this.node);
 		cc.director.loadScene("Portal");
 	},
