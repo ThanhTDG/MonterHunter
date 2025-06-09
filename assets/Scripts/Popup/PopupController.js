@@ -34,7 +34,6 @@ cc.Class({
 		const popup = this.popupMap[type];
 		popup.show();
 		this.openStack.push(type);
-		console.log(this)
 	},
 	hideTopPopup(type) {
 		let index = this.openStack.indexOf(type);

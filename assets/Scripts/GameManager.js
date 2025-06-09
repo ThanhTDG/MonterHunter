@@ -5,6 +5,13 @@ const { EXIT } = require("./Event/EventKeys/SystemEventKeys");
 const { SoundController } = require("./Sound/SoundController");
 const { SceneController } = require("./System/SceneController");
 
+const AssetType = {
+	SOUND: "sound",
+	SCENE: "scene",
+	POPUP: "popup",
+
+}
+
 cc.Class({
 	extends: cc.Component,
 
@@ -27,24 +34,53 @@ cc.Class({
 		Emitter.instance.registerEventMap(this.eventMap);
 	},
 	startLoading() {
-		let totalAssets = 0;
-		let loadedCount = 0;
-		const checkLoaded = () => {
-			loadedCount++;
-			this.handleLoading(loadedCount, totalAssets);
+		const totalAssets = {
+			[AssetType.SOUND]: 0,
+			[AssetType.SCENE]: 0,
+			[AssetType.POPUP]: 0
 		};
-		const onTotal = (amount) => {
-			totalAssets += amount;
-		}
-		totalAssets += SoundController.instance.preLoad(checkLoaded);
-		totalAssets += SceneController.instance.preLoad(checkLoaded);
-		this.popupController.preLoad(checkLoaded, onTotal);
-	},
+		const loadedCount = Object.assign({}, totalAssets);
+		let lastPercent = 0
+		const checkLoaded = (type) => {
+			loadedCount[type]++;
+			lastPercent = this.handleLoading(loadedCount, totalAssets, lastPercent);
+		};
+		const onTotal = (type, amount) => {
+			totalAssets[type] += amount;
+		};
 
-	handleLoading(loadedCount, total) {
-		const percent = loadedCount / total;
-		this.emitLoading(percent);
-		if (loadedCount >= total) {
+		const preload = (controller, type) => {
+			controller.preLoad(
+				() => checkLoaded(type),
+				(amount) => onTotal(type, amount)
+			);
+		};
+		preload(SoundController.instance, AssetType.SOUND);
+		preload(SceneController.instance, AssetType.SCENE);
+		preload(this.popupController, AssetType.POPUP);
+	},
+	getTotalAsset(map) {
+		return Object.values(map).reduce((total, count) => total + count, 0);
+	},
+	handleLoading(loadedCount, totalAssets, lastPercent) {
+		const types = Object.keys(loadedCount);
+		const weight = 1 / types.length;
+		let percent = 0;
+		types.forEach(type => {
+			const loaded = loadedCount[type] || 0;
+			const total = totalAssets[type] || 0;
+			if (total === 0) {
+				return;
+			}
+			percent += (loaded / total) * weight;
+		});
+		percent = Math.min(percent, 1);
+		if (percent === lastPercent) {
+			return lastPercent;
+		} else {
+			this.emitLoading(percent);
+		}
+		if (percent >= 1) {
 			this.emitLoadingComplete();
 		}
 	},

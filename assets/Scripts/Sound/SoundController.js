@@ -1,5 +1,4 @@
-import { loadAudioClip } from "../Utils/FileUtils";
-
+const { loadAudioClip } = require("../Utils/FileUtils");
 const { AudioItem } = require("./AudioItem");
 const { AudioKey, AudioPath } = require("./AudioConfigs");
 const { SoundConfigType: ConfigType } = require("../Enum/SoundConfigType");
@@ -45,8 +44,11 @@ export class SoundController {
 		Emitter.instance.registerEventMap(this.eventMap);
 	}
 
-	preLoad(onLoaded) {
+	preLoad(onLoaded, onLoad) {
 		const files = Object.keys(AudioPath);
+		if (onLoad) {
+			onLoad(files.length);
+		}
 		files.forEach((key) => {
 			const name = AudioPath[key];
 			loadAudioClip(name, (audioClip) => {
@@ -54,8 +56,6 @@ export class SoundController {
 				onLoaded();
 			});
 		});
-		const total = files.length;
-		return total;
 	}
 
 	playSound(audioKey, loop = false) {
