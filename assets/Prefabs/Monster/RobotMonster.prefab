@@ -423,9 +423,12 @@
     "healthBar": {
       "__id__": 10
     },
+    "spriteNode": {
+      "__id__": 2
+    },
     "maxHealth": 100,
     "currentHealth": 100,
-    "amount": 100,
+    "damage": 50,
     "_id": ""
   },
   {

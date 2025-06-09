@@ -1,3 +1,6 @@
-export const END_WAVE = 'END_WAVE';
-export const COLLISION_ENDSCENE = "COLLISION_ENDSCENE";
-export const SPAWN_EFFECT = "SPAWN_EFFECT";
+export const MONSTER_DIED = "MONSTER_DIED";
+export const MONSTER_END = "MONSTER_END";
+export const PLAYER_ATTACKED = "PLAYER_ATTACKED";
+export const COLLISION_MONSTER = "COLLISION_MONSTER";
+export const CREATE_MONSTER = "CREATE_MONSTER";
+export const GAME_LOSE = "GAME_LOSE";
