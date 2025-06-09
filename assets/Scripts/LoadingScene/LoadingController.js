@@ -7,9 +7,11 @@ cc.Class({
 		progressBar: cc.ProgressBar,
 		loadingText: cc.RichText,
 		text: "LOADING...",
+		loadingStep: 0,
 	},
 	onLoad() {
 		this.initialize();
+		this.schedule(this.animateLoadingText, 0.2)
 	},
 	start() {
 		this.emitStartLoading();
@@ -37,7 +39,16 @@ cc.Class({
 	setProgress(percent) {
 		this.progressBar.progress = percent;
 	},
+	animateLoadingText() {
+		const base = this.text;
+		const step = this.loadingStep % base.length;
+		const newText = base.slice(step, base.length) + base.slice(0, step);
+		this.loadingText.string = newText;
+		this.loadingStep++;
+	},
+
 	onDestroy() {
+		this.unschedule(this.animateLoadingText);
 		Emitter.instance.removeEventMap(this.eventMap);
 	},
 });

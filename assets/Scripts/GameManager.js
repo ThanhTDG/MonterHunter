@@ -2,15 +2,22 @@ const { SceneName } = require("./Enum/SceneName");
 const Emitter = require("./Event/Emitter");
 const loadingEventsKeys = require("./Event/EventKeys/LoadingEventKeys");
 const { EXIT } = require("./Event/EventKeys/SystemEventKeys");
-const { AudioPath } = require("./Sound/AudioConfigs");
 const { SoundController } = require("./Sound/SoundController");
 const { SceneController } = require("./System/SceneController");
 
-const { loadAudioClip } = require("./Utils/FileUtils");
+const AssetType = {
+	SOUND: "sound",
+	SCENE: "scene",
+	POPUP: "popup",
+
+}
+
 cc.Class({
 	extends: cc.Component,
 
-	properties: {},
+	properties: {
+		popupController: require("./Popup/PopupController"),
+	},
 	onLoad() {
 		this.initialize();
 	},
@@ -27,46 +34,53 @@ cc.Class({
 		Emitter.instance.registerEventMap(this.eventMap);
 	},
 	startLoading() {
-		let totalAssets = 0;
-		let loadedCount = 0;
-		const checkLoaded = () => {
-			loadedCount++;
-			this.handleLoading(loadedCount, totalAssets);
+		const totalAssets = {
+			[AssetType.SOUND]: 0,
+			[AssetType.SCENE]: 0,
+			[AssetType.POPUP]: 0
 		};
-		totalAssets += this.preLoadSound(checkLoaded);
-		totalAssets += this.preLoadScene(checkLoaded);
-	},
+		const loadedCount = Object.assign({}, totalAssets);
+		let lastPercent = 0
+		const checkLoaded = (type) => {
+			loadedCount[type]++;
+			lastPercent = this.handleLoading(loadedCount, totalAssets, lastPercent);
+		};
+		const onTotal = (type, amount) => {
+			totalAssets[type] += amount;
+		};
 
-	preLoadScene(onLoaded) {
-		const names = Object.values(SceneName);
-		names.forEach((sceneName) => {
-			cc.director.preloadScene(sceneName, null, (error, asset) => {
-				if (!error) {
-					onLoaded();
-				} else {
-					cc.error(`Preload scene error for ${sceneName}:`, error);
-				}
-			});
+		const preload = (controller, type) => {
+			controller.preLoad(
+				() => checkLoaded(type),
+				(amount) => onTotal(type, amount)
+			);
+		};
+		preload(SoundController.instance, AssetType.SOUND);
+		preload(SceneController.instance, AssetType.SCENE);
+		preload(this.popupController, AssetType.POPUP);
+	},
+	getTotalAsset(map) {
+		return Object.values(map).reduce((total, count) => total + count, 0);
+	},
+	handleLoading(loadedCount, totalAssets, lastPercent) {
+		const types = Object.keys(loadedCount);
+		const weight = 1 / types.length;
+		let percent = 0;
+		types.forEach(type => {
+			const loaded = loadedCount[type] || 0;
+			const total = totalAssets[type] || 0;
+			if (total === 0) {
+				return;
+			}
+			percent += (loaded / total) * weight;
 		});
-		return names.length;
-	},
-
-	preLoadSound(onLoaded) {
-		const sounds = Object.keys(AudioPath);
-		sounds.forEach((key) => {
-			const path = AudioPath[key];
-			loadAudioClip(path, key, (clip) => {
-				SoundController.instance.setAudioClip(key, clip);
-				onLoaded();
-			});
-		});
-		return sounds.length;
-	},
-
-	handleLoading(loadedCount, total) {
-		const percent = loadedCount / total;
-		this.emitLoading(percent);
-		if (loadedCount >= total) {
+		percent = Math.min(percent, 1);
+		if (percent === lastPercent) {
+			return lastPercent;
+		} else {
+			this.emitLoading(percent);
+		}
+		if (percent >= 1) {
 			this.emitLoadingComplete();
 		}
 	},
@@ -80,27 +94,20 @@ cc.Class({
 	emitLoading(percent) {
 		Emitter.instance.emit(loadingEventsKeys.LOADING, percent);
 	},
-	releaseSounds() {
-		const sounds = Object.keys(AudioPath);
-		sounds.forEach((key) => {
-			const path = AudioPath[key];
-			const clip = SoundController.instance.getAudioClip(key);
-			if (clip) {
-				cc.loader.releaseAsset(clip);
-				SoundController.instance.setAudioClip(key, null);
-			}
-		});
-		SoundController.instance.destroy();
-	},
-	releaseEvents() {
+
+	removeEvents() {
 		Emitter.instance.removeEventMap(this.eventMap);
+	},
+	releaseInstances() {
+		SceneController.instance.destroy();
+		SoundController.instance.destroy();
+		this.popupController.destroy();
 		Emitter.instance.destroy();
 	},
 
 	terminate() {
-		SceneController.instance.destroy();
-		this.releaseSounds();
-		this.releaseEvents();
+		this.removeEvents();
+		this.releaseInstances();
 		cc.game.removePersistRootNode(this.node);
 		cc.director.loadScene("Portal");
 	},
