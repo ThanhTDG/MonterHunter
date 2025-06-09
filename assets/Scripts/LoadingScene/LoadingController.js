@@ -1,41 +1,54 @@
-// Learn cc.Class:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/class.html
-//  - [English] http://docs.cocos2d-x.org/creator/manual/en/scripting/class.html
-// Learn Attribute:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/reference/attributes.html
-//  - [English] http://docs.cocos2d-x.org/creator/manual/en/scripting/reference/attributes.html
-// Learn life-cycle callbacks:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/life-cycle-callbacks.html
-//  - [English] https://www.cocos2d-x.org/docs/creator/manual/en/scripting/life-cycle-callbacks.html
-
+const Emitter = require("../Event/Emitter");
+const LoadingEventKeys = require("../Event/EventKeys/LoadingEventKeys");
 cc.Class({
-    extends: cc.Component,
+	extends: cc.Component,
 
-    properties: {
-        // foo: {
-        //     // ATTRIBUTES:
-        //     default: null,        // The default value will be used only when the component attaching
-        //                           // to a node for the first time
-        //     type: cc.SpriteFrame, // optional, default is typeof default
-        //     serializable: true,   // optional, default is true
-        // },
-        // bar: {
-        //     get () {
-        //         return this._bar;
-        //     },
-        //     set (value) {
-        //         this._bar = value;
-        //     }
-        // },
-    },
+	properties: {
+		progressBar: cc.ProgressBar,
+		loadingText: cc.RichText,
+		text: "LOADING...",
+		loadingStep: 0,
+	},
+	onLoad() {
+		this.initialize();
+		this.schedule(this.animateLoadingText, 0.2)
+	},
+	start() {
+		this.emitStartLoading();
+	},
 
-    // LIFE-CYCLE CALLBACKS:
+	initialize() {
+		this.progressBar.progress = 0;
+		this.loadingText.string = this.text;
+		this.registerEvents();
+	},
+	registerEvents() {
+		this.eventMap = {
+			[LoadingEventKeys.LOADING]: this.setProgress.bind(this),
+			[LoadingEventKeys.LOADING_COMPLETE]: this.onLoadingComplete.bind(this),
+		};
+		Emitter.instance.registerEventMap(this.eventMap);
+	},
+	onLoadingComplete(loadedCallback) {
+		this.progressBar.progress = 1;
+		loadedCallback();
+	},
+	emitStartLoading() {
+		Emitter.instance.emit(LoadingEventKeys.START_LOADING);
+	},
+	setProgress(percent) {
+		this.progressBar.progress = percent;
+	},
+	animateLoadingText() {
+		const base = this.text;
+		const step = this.loadingStep % base.length;
+		const newText = base.slice(step, base.length) + base.slice(0, step);
+		this.loadingText.string = newText;
+		this.loadingStep++;
+	},
 
-    // onLoad () {},
-
-    start () {
-
-    },
-
-    // update (dt) {},
+	onDestroy() {
+		this.unschedule(this.animateLoadingText);
+		Emitter.instance.removeEventMap(this.eventMap);
+	},
 });
