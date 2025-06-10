@@ -6,6 +6,7 @@ cc.Class({
     init(waveData, monsterController) {
         this.waves = waveData;
         this.currentWave = 0;
+        this.totalWave = waveData.length;
         this.monsterController = monsterController;
         this.onAllWavesFinished = null;
     },
@@ -13,6 +14,10 @@ cc.Class({
     startWaves(onFinishedCallback) {
         this.onAllWavesFinished = onFinishedCallback;
         this.scheduleOnce(() => this.spawnNextWave(), 1);
+    },
+
+    scheduleNextWave(delay = 0) {
+        setTimeout(() => this.spawnNextWave(), delay * 1000);
     },
 
     spawnNextWave() {
@@ -36,11 +41,14 @@ cc.Class({
         monsters.forEach((mons, index) => {
             this.scheduleOnce(() => {
                 this.monsterController.spawnMonster(mons);
-            }, index * 0.4);
+            }, index * 1);
         });
-
+        cc.log('curOLD', this.currentWave);
         this.currentWave++;
-        this.scheduleOnce(() => this.spawnNextWave(), monsters.length * 0.4 + 4);
+        let newWave = this.currentWave;
+
+        Emitter.instance.emit(MonsterEventKey.NEW_WAVE, { totalWave: this.totalWave, newWave: newWave });
+        this.scheduleNextWave(monsters.length * 1.5);
     },
 
     clear() {

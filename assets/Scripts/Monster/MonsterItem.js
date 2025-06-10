@@ -13,6 +13,7 @@ cc.Class({
         maxHealth: 100,
         currentHealth: 100,
         damage: 50,
+        speed: 100,
     },
 
     onLoad() {
@@ -29,6 +30,8 @@ cc.Class({
         this.currentHealth = this.maxHealth;
         this.healthBar.progress = 1;
         this.level = level;
+        this.speed = 100 + (level * 50);
+
         this.initFSM();
 
         this.scheduleOnce(() => {
@@ -56,8 +59,13 @@ cc.Class({
     },
 
     startWalking() {
+        let moveDistance = -cc.winSize.width - 600;
+        let moveTime = Math.abs(moveDistance) / this.speed;
+
+        console.log(`Quái cấp ${this.level} di chuyển với tốc độ ${this.speed}, thời gian: ${moveTime}s`);
+
         this.moveTween = cc.tween(this.node)
-            .by(7, { x: -cc.winSize.width - 600 })
+            .by(moveTime, { x: moveDistance })
             .call(() => {
                 if (this.fsm.can(MonsterState.Transition.DIE)) {
                     this.fsm[MonsterState.Transition.DIE]();
@@ -219,7 +227,12 @@ cc.Class({
         if (other.node.group === EntityGroup.BOUNDARY) {
             this.stopAttacking();
             this.node.destroy();
-            Emitter.instance.emit(MonsterEventKey.MONSTER_END);
+            Emitter.instance.emit(MonsterEventKey.MONSTER_END, {
+                id: this.id,
+                type: this.type,
+                level: this.level,
+                pos: this.node.getPosition()
+            });
         }
     },
 

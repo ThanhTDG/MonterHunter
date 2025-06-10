@@ -27,8 +27,9 @@ module.exports = {
             totalScore: 20,
             endTime: 15,
             waves: [
+                [{ type: "DogMonster", count: 5 }, { type: "WolfMonster", count: 5 }],
                 [{ type: "DogMonster", count: 10 }, { type: "WolfMonster", count: 5 }],
-                [{ type: "DragonMonster", count: 5 }]
+                [{ type: "DragonMonster", count: 7 }]
             ]
         }
     ]

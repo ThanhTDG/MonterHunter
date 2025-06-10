@@ -18,7 +18,7 @@ cc.Class({
             bonusMultiplier = 1.0;
         }
 
-        const score = (Math.floor(deadCount * bonusMultiplier)) * baseMultiplier;
+        const score = (deadCount * bonusMultiplier) * baseMultiplier;
         return score;
     }
 });
