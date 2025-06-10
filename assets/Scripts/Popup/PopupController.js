@@ -4,6 +4,8 @@ const Emitter = require("../Event/Emitter");
 const PopupItem = require("./PopupItem");
 const { loadPrefabs } = require("../Utils/FileUtils");
 const { PopupType } = require("../Enum/popupType");
+const { SoundController } = require("../Sound/SoundController");
+const { AudioKey } = require("../Enum/AudioKey");
 
 cc.Class({
 	extends: cc.Component,
@@ -48,6 +50,7 @@ cc.Class({
 		if (data) {
 			popup.setData(data);
 		}
+		SoundController.playSound(AudioKey.POPUP_OPEN);
 		popup.show();
 		this.openStack.push(type);
 	},
