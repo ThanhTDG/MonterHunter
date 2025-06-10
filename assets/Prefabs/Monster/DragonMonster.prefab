@@ -107,13 +107,13 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 541,
-      "height": 281
+      "width": 270.5,
+      "height": 140.5
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
       "x": 0.5,
-      "y": 0.5
+      "y": 0
     },
     "_position": {
       "__type__": "cc.Vec3",
@@ -217,8 +217,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 200,
-      "height": 25
+      "width": 130,
+      "height": 15
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -227,8 +227,8 @@
     },
     "_position": {
       "__type__": "cc.Vec3",
-      "x": -200,
-      "y": 100,
+      "x": -120,
+      "y": 121,
       "z": 0
     },
     "_scale": {
@@ -277,8 +277,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 40,
-      "height": 25
+      "width": 26,
+      "height": 15
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -392,7 +392,7 @@
       "__id__": 5
     },
     "_enabled": true,
-    "_N$totalLength": 200,
+    "_N$totalLength": 130,
     "_N$barSprite": {
       "__id__": 7
     },
@@ -442,13 +442,13 @@
     "tag": 0,
     "_offset": {
       "__type__": "cc.Vec2",
-      "x": -120,
-      "y": -40
+      "x": -64,
+      "y": 44
     },
     "_size": {
       "__type__": "cc.Size",
-      "width": 220,
-      "height": 150
+      "width": 108,
+      "height": 67
     },
     "_id": ""
   },

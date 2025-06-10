@@ -1,25 +1,31 @@
-const EventKey = require('MonsterEventKey');
+const MonsterEventKey = require('MonsterEventKey');
 const Emitter = require('Emitter');
 cc.Class({
     extends: cc.Component,
 
-    init(waveData, monsterController, endTime = 15) {
+    init(waveData, monsterController) {
         this.waves = waveData;
         this.currentWave = 0;
+        this.totalWave = waveData.length;
         this.monsterController = monsterController;
-        this.endTime = endTime;
-        this.countdownTimer = null;
-        this.endTimeCallback = null;
+        this.onAllWavesFinished = null;
     },
 
-    startWaves() {
+    startWaves(onFinishedCallback) {
+        this.onAllWavesFinished = onFinishedCallback;
         this.scheduleOnce(() => this.spawnNextWave(), 1);
+    },
+
+    scheduleNextWave(delay = 0) {
+        setTimeout(() => this.spawnNextWave(), delay * 1000);
     },
 
     spawnNextWave() {
         const config = this.waves[this.currentWave];
         if (!config) {
-            this.startEndCountdown();
+            if (this.onAllWavesFinished) {
+                this.onAllWavesFinished();
+            }
             return;
         }
 
@@ -32,46 +38,21 @@ cc.Class({
             }
         });
 
-        monsters.forEach((m, i) => {
+        monsters.forEach((mons, index) => {
             this.scheduleOnce(() => {
-                this.monsterController.spawnMonster(m);
-            }, i * 0.4);
+                this.monsterController.spawnMonster(mons);
+            }, index * 1);
         });
-
+        cc.log('curOLD', this.currentWave);
         this.currentWave++;
-        this.scheduleOnce(() => this.spawnNextWave(), monsters.length * 0.4 + 4);
-    },
+        let newWave = this.currentWave;
 
-    startEndCountdown() {
-        if (this.countdownTimer) return;
-
-        this.countdownTimer = this.endTime;
-        this.endTimeCallback = () => {
-            this.countdownTimer--;
-            cc.log("Time left:", this.countdownTimer); // set label để hiện ui
-
-            if (this.countdownTimer <= 0) {
-                this.unschedule(this.endTimeCallback);
-
-                const remaining = Object.keys(this.monsterController.monsters).length;
-                if (remaining > 0) {
-                    Emitter.instance.emit(EventKey.GAME_LOSE); // bắn sự kiện thua
-                }
-            }
-        };
-
-        this.schedule(this.endTimeCallback, 1);
-    },
-
-    cancelEndCountdown() {
-        if (this.endTimeCallback) {
-            this.unschedule(this.endTimeCallback);
-            this.endTimeCallback = null;
-        }
+        Emitter.instance.emit(MonsterEventKey.NEW_WAVE, { totalWave: this.totalWave, newWave: newWave });
+        this.scheduleNextWave(monsters.length * 1.5);
     },
 
     clear() {
         this.unscheduleAllCallbacks();
-        this.cancelEndCountdown();
+        this.currentWave = 0;
     }
 });

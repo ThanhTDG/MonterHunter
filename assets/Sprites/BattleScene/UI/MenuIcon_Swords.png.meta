@@ -1,0 +1,34 @@
+{
+  "ver": "2.3.3",
+  "uuid": "15f1cfc0-be1e-4113-a918-bfd805190724",
+  "type": "sprite",
+  "wrapMode": "clamp",
+  "filterMode": "bilinear",
+  "premultiplyAlpha": false,
+  "genMipmaps": false,
+  "packable": true,
+  "platformSettings": {},
+  "subMetas": {
+    "MenuIcon_Swords": {
+      "ver": "1.0.4",
+      "uuid": "594f4bac-6138-4347-b5d5-54796fda7aec",
+      "rawTextureUuid": "15f1cfc0-be1e-4113-a918-bfd805190724",
+      "trimType": "auto",
+      "trimThreshold": 1,
+      "rotated": false,
+      "offsetX": 0,
+      "offsetY": 0,
+      "trimX": 0,
+      "trimY": 0,
+      "width": 79,
+      "height": 67,
+      "rawWidth": 79,
+      "rawHeight": 67,
+      "borderTop": 0,
+      "borderBottom": 0,
+      "borderLeft": 0,
+      "borderRight": 0,
+      "subMetas": {}
+    }
+  }
+}
