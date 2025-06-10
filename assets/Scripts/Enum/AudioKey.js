@@ -1,5 +1,7 @@
 export const AudioKey = {
-    MUSIC: 'MUSIC',
+    LOBBY_BGM: 'LOBBY_BGM',
+    BATTLE_BGM: 'BATTLE_BGM',
     CLICK: 'CLICK',
-    COIN: 'COIN',
+    POPUP_OPEN: 'POPUP_OPEN',
+
 }

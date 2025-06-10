@@ -1,7 +1,7 @@
-const { SceneName } = require("./Enum/SceneName");
+const { SceneName, SCENE_TRANSITIONS } = require("./Enum/Scene");
 const Emitter = require("./Event/Emitter");
 const loadingEventsKeys = require("./Event/EventKeys/LoadingEventKeys");
-const { EXIT } = require("./Event/EventKeys/SystemEventKeys");
+const { EXIT_GAME } = require("./Event/EventKeys/SystemEventKeys");
 const { SoundController } = require("./Sound/SoundController");
 const { SceneController } = require("./System/SceneController");
 
@@ -29,7 +29,7 @@ cc.Class({
 	registerEvents() {
 		this.eventMap = {
 			[loadingEventsKeys.START_LOADING]: this.startLoading.bind(this),
-			[EXIT]: this.terminate.bind(this),
+			[EXIT_GAME]: this.terminate.bind(this),
 		};
 		Emitter.instance.registerEventMap(this.eventMap);
 	},
@@ -86,7 +86,8 @@ cc.Class({
 	},
 	emitLoadingComplete() {
 		const loadedCallback = () => {
-			SceneController.instance.loadScene(SceneName.LOBBY);
+			const transition = SCENE_TRANSITIONS.TO_LOBBY;
+			SceneController.instance.toTransition(transition);
 		};
 		Emitter.instance.emit(loadingEventsKeys.LOADING_COMPLETE, loadedCallback);
 	},
