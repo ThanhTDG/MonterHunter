@@ -1,5 +1,5 @@
-const BulletEventKey = require("../Event/EventKeys/BulletEventKey");
-const Emitter = require("../Event/Emitter");
+const Emitter = require("../../Event/Emitter");
+const BulletEventKey = require("../../Event/EventKeys/BulletEventKey");
 cc.Class({
     extends: require('BulletItem'),
 
@@ -7,8 +7,6 @@ cc.Class({
 
 
     },
-
-
 
     onCollisionEnter(other, self) {
         if (other.node.group === 'monster') {

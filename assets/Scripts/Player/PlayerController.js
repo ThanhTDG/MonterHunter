@@ -1,7 +1,7 @@
 const StateMachine = require("javascript-state-machine");
 const Emitter = require("../Event/Emitter");
 const PlayerEventKey = require("../Event/EventKeys/PlayerEventKey");
-const BattleEventKey = require("../Event/EventKeys/BattleEventKey");
+const PlayerState = require('PlayerState');
 
 cc.Class({
     extends: cc.Component,
@@ -16,6 +16,8 @@ cc.Class({
         this.eventMap = {
             [PlayerEventKey.PLAYER_INIT]: this.onInit.bind(this),
             [PlayerEventKey.PLAYER_MOVE]: this.onPlayerMove.bind(this),
+            [PlayerEventKey.INCREASE_SHOOT_SPEED]: this.onIncreaseShootSpeed.bind(this),
+            [PlayerEventKey.ACTIVATE_ULTIMATE]: this.onUltimateActivated.bind(this),
         };
         Emitter.instance.registerEventMap(this.eventMap);
     },
@@ -24,6 +26,7 @@ cc.Class({
         this.hp = playerData.hp;
         this.damage = playerData.damage;
         this.shootSpeed = playerData.shootSpeed;
+        this.originalShootSpeed = playerData.shootSpeed;
         this.moveSpeed = playerData.moveSpeed;
 
 
@@ -31,14 +34,18 @@ cc.Class({
         this.setupFSM();
     },
 
+    getCurrentHealth(){
+        return this.hp;
+    },
+
     setupFSM() {
         this.fsm = new StateMachine({
-            init: "null",
+            init: PlayerState.State.NULL,
             transitions: [
-                { name: "initialize", from: "null", to: "ready" },
-                { name: "move", from: ["shooting"], to: "moving" },
-                { name: "stop", from: ["moving", "shooting"], to: "stop" },
-                { name: "shoot", from: ["stop", "ready", "shooting"], to: "shooting" },
+                { name: PlayerState.Transition.INITIALIZE, from: PlayerState.State.NULL, to: PlayerState.State.READY },
+                { name: PlayerState.Transition.MOVE, from: [PlayerState.State.SHOOTING], to: PlayerState.State.MOVING },
+                { name: PlayerState.Transition.STOP, from: [PlayerState.State.MOVING, PlayerState.State.SHOOTING], to: PlayerState.State.STOP },
+                { name: PlayerState.Transition.SHOOT, from: [PlayerState.State.STOP, PlayerState.State.READY, PlayerState.State.SHOOTING], to: PlayerState.State.SHOOTING },
             ],
             methods: {
                 onInitialize: () => this.playPortalAnimation(),
@@ -118,6 +125,10 @@ cc.Class({
             .start();
     },
 
+    onUltimateActivated() {
+        this.bulletController.getComponent('BulletController').spawnUltimateBullet(this.damage);
+    },
+
     startShooting() {
         this.unschedule(this.spawnBullet);
         this.schedule(this.spawnBullet, this.shootSpeed);
@@ -133,11 +144,24 @@ cc.Class({
         this.bulletController.getComponent('BulletController').spawnBullet(bulletWorldPos, this.damage);
     },
 
+    onIncreaseShootSpeed({ multiplier, duration }) {
+
+        this.shootSpeed /= multiplier;
+        this.unschedule(this.spawnBullet);
+        this.schedule(this.spawnBullet, this.shootSpeed);
+
+        this.scheduleOnce(() => {
+            this.shootSpeed = this.originalShootSpeed;
+            this.unschedule(this.spawnBullet);
+            this.schedule(this.spawnBullet, this.shootSpeed);
+        }, duration);
+    },
 
     clear() {
         this.hp = 0;
         this.damage = 0;
         this.shootSpeed = 0;
+        this.originalShootSpeed = 0;
         this.moveSpeed = 0;
         this.listPlayerPos = [];
         this.currentLaneIndex = 0;
@@ -154,7 +178,6 @@ cc.Class({
             this.spine.clearTrack(0);
         }
 
-        cc.log("Player data and state cleared.");
     },
 
     onDestroy() {

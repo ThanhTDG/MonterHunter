@@ -1,8 +1,18 @@
+const {SkillType} = require('../../Enum/SkillType');
+
 cc.Class({
     extends: cc.Component,
 
     properties: {
-        cooldownTime: 5,
+        skillType: {
+            default: SkillType.ATKSPEEDUP,
+            type: cc.Enum(SkillType),
+            
+            
+        },
+        cooldownTime: {
+            default: 15,
+        },
         cooldownLabel: cc.Label,
     },
 
@@ -15,6 +25,10 @@ cc.Class({
         this.remainingTime = 0;
 
         this.button.node.on('click', this.activateSkill, this);
+        this.initializeSkill();
+    },
+
+    initializeSkill() {
     },
 
     activateSkill() {
@@ -23,7 +37,9 @@ cc.Class({
             return;
         }
 
-        this.onSkillActivated();
+        if (this.onSkillActivated) {
+            this.onSkillActivated();
+        }
         this.startCooldown();
     },
 
@@ -31,9 +47,9 @@ cc.Class({
         cc.log("Skill activated!");
     },
 
-    startCooldown() {
+    startCooldown(cooldownTime = this.cooldownTime) {
         this.isCooldown = true;
-        this.remainingTime = this.cooldownTime;
+        this.remainingTime = cooldownTime;
 
         this.progressBar.progress = 0;
         this.cooldownLabel.string = this.remainingTime.toFixed(1);
@@ -43,28 +59,31 @@ cc.Class({
         this.schedule(this.updateCooldown, 0.1);
     },
 
-updateCooldown(dt) {
-    if (this.remainingTime > 0) {
-        this.remainingTime -= dt;
+    updateCooldown(dt) {
+        if (this.remainingTime > 0) {
+            this.remainingTime -= dt;
 
-        if (this.remainingTime < 0) this.remainingTime = 0;
+            if (this.remainingTime < 0) this.remainingTime = 0;
 
-        const progress = 1 - this.remainingTime / this.cooldownTime;
-        this.progressBar.progress = progress;
+            const progress = 1 - this.remainingTime / this.cooldownTime;
+            this.progressBar.progress = progress;
 
-        this.cooldownLabel.string = this.remainingTime.toFixed(1);
-        this.node.opacity = 100;
+            this.cooldownLabel.string = this.remainingTime.toFixed(1);
+            this.node.opacity = 100;
 
-    } else {
-        this.isCooldown = false;
+        } else {
+            this.isCooldown = false;
 
-        this.progressBar.progress = 1;
-        this.cooldownLabel.node.active = false;
+            this.progressBar.progress = 1;
+            this.cooldownLabel.node.active = false;
 
-        this.node.opacity = 255;
+            this.node.opacity = 255;
 
-        this.unschedule(this.updateCooldown);
-    }
-}
+            this.unschedule(this.updateCooldown);
+            this.onCooldownComplete();
+        }
+    },
 
+    onCooldownComplete() {
+    },
 });

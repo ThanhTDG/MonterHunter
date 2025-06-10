@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "Skill",
+    "_name": "UltimateSkill",
     "_objFlags": 0,
     "_parent": null,
     "_children": [
@@ -63,8 +63,8 @@
     },
     "_position": {
       "__type__": "cc.Vec3",
-      "x": 1214.431,
-      "y": 88.861,
+      "x": 0,
+      "y": 0,
       "z": 0
     },
     "_scale": {
@@ -113,8 +113,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 90,
-      "height": 90
+      "width": 130,
+      "height": 130
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -183,14 +183,14 @@
       "__id__": 1
     },
     "asset": {
-      "__uuid__": "b19707d0-977d-45f1-bc2b-a86414688b51"
+      "__uuid__": "0136033a-adea-403c-a172-ee7810f8eeae"
     },
-    "fileId": "c4u5beQKhCL6w0nI3dch2r",
+    "fileId": "80EH38N0lI94iXUnf7b61u",
     "sync": false
   },
   {
     "__type__": "cc.Node",
-    "_name": "StrengthIcon",
+    "_name": "IconSkill",
     "_objFlags": 0,
     "_parent": {
       "__id__": 1
@@ -209,15 +209,15 @@
     "_opacity": 255,
     "_color": {
       "__type__": "cc.Color",
-      "r": 240,
-      "g": 240,
-      "b": 240,
+      "r": 243,
+      "g": 247,
+      "b": 178,
       "a": 255
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 50,
-      "height": 50
+      "width": 90,
+      "height": 90
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -264,7 +264,7 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_spriteFrame": {
-      "__uuid__": "659bd97e-1b5f-426f-9db6-d898243aff5b"
+      "__uuid__": "ca3355c0-8f05-43a8-acf0-8c500ad532fb"
     },
     "_type": 0,
     "_sizeMode": 0,
@@ -286,14 +286,14 @@
       "__id__": 1
     },
     "asset": {
-      "__uuid__": "b19707d0-977d-45f1-bc2b-a86414688b51"
+      "__uuid__": "0136033a-adea-403c-a172-ee7810f8eeae"
     },
-    "fileId": "0clja/mHJBFpJjiHQfNPrq",
+    "fileId": "ffn6dnz3dEWoUiFf8w2TpT",
     "sync": false
   },
   {
     "__type__": "cc.Node",
-    "_name": "SkillLabel",
+    "_name": "UltimateLabel",
     "_objFlags": 0,
     "_parent": {
       "__id__": 1
@@ -389,9 +389,9 @@
       "__id__": 1
     },
     "asset": {
-      "__uuid__": "b19707d0-977d-45f1-bc2b-a86414688b51"
+      "__uuid__": "0136033a-adea-403c-a172-ee7810f8eeae"
     },
-    "fileId": "e0bfyDcS1LCY4yVZTH7Ork",
+    "fileId": "d8tLA8/H1NMoNiyRUJH00m",
     "sync": false
   },
   {
@@ -409,20 +409,6 @@
     "_N$mode": 2,
     "_N$progress": 1,
     "_N$reverse": false,
-    "_id": ""
-  },
-  {
-    "__type__": "01b9dGdgwpFXIhsA1MGvIN4",
-    "_name": "",
-    "_objFlags": 0,
-    "node": {
-      "__id__": 1
-    },
-    "_enabled": true,
-    "cooldownTime": 10,
-    "cooldownLabel": {
-      "__id__": 9
-    },
     "_id": ""
   },
   {
@@ -492,14 +478,30 @@
     "_id": ""
   },
   {
+    "__type__": "7f727RiYxVJ9osi4YqUNgUN",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 1
+    },
+    "_enabled": true,
+    "skillType": 1,
+    "cooldownTime": 5,
+    "cooldownLabel": {
+      "__id__": 9
+    },
+    "requiredKills": 10,
+    "_id": ""
+  },
+  {
     "__type__": "cc.PrefabInfo",
     "root": {
       "__id__": 1
     },
     "asset": {
-      "__uuid__": "b19707d0-977d-45f1-bc2b-a86414688b51"
+      "__uuid__": "0136033a-adea-403c-a172-ee7810f8eeae"
     },
-    "fileId": "77Buxp8EVMCZ0QOBBXl0sR",
+    "fileId": "61BHiPFUdDGaFYVNVcn+13",
     "sync": false
   }
 ]
