@@ -152,7 +152,12 @@ cc.Class({
     handleDeath() {
         this.stopAttacking();
 
-        Emitter.instance.emit(MonsterEventKey.MONSTER_DIED); // sự kiện bị kill
+        Emitter.instance.emit(MonsterEventKey.MONSTER_DEAD, {
+            id: this.id,
+            type: this.type,
+            level: this.level,
+            pos: this.node.getPosition()
+        });
 
         if (this.moveTween) {
             this.moveTween.stop();

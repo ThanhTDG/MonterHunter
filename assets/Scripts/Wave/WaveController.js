@@ -3,23 +3,24 @@ const Emitter = require('Emitter');
 cc.Class({
     extends: cc.Component,
 
-    init(waveData, monsterController, endTime = 15) {
+    init(waveData, monsterController) {
         this.waves = waveData;
         this.currentWave = 0;
         this.monsterController = monsterController;
-        this.endTime = endTime;
-        this.countdownTimer = null;
-        this.endTimeCallback = null;
+        this.onAllWavesFinished = null;
     },
 
-    startWaves() {
+    startWaves(onFinishedCallback) {
+        this.onAllWavesFinished = onFinishedCallback;
         this.scheduleOnce(() => this.spawnNextWave(), 1);
     },
 
     spawnNextWave() {
         const config = this.waves[this.currentWave];
         if (!config) {
-            Emitter.instance.emit(MonsterEventKey.END_WAVE);
+            if (this.onAllWavesFinished) {
+                this.onAllWavesFinished();
+            }
             return;
         }
 
@@ -32,10 +33,10 @@ cc.Class({
             }
         });
 
-        monsters.forEach((m, i) => {
+        monsters.forEach((mons, index) => {
             this.scheduleOnce(() => {
-                this.monsterController.spawnMonster(m);
-            }, i * 0.4);
+                this.monsterController.spawnMonster(mons);
+            }, index * 0.4);
         });
 
         this.currentWave++;
@@ -44,7 +45,6 @@ cc.Class({
 
     clear() {
         this.unscheduleAllCallbacks();
-        Emitter.instance.removeEvent(MonsterEventKey.MONSTER_DIED, this._onMonsterDied);
-
+        this.currentWave = 0;
     }
 });

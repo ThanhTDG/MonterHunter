@@ -10,6 +10,8 @@ cc.Class({
         waveController: require('WaveController'),
         monsterController: require('MonsterController'),
         laneManager: require('LaneManager'),
+        playerController: require('PlayerController'),
+        scoreCal: require('ScoreCalculator'),
         monsterLayer: cc.Node,
         mapLabel: cc.Node,
         countDownLabel: cc.Node,
@@ -18,10 +20,8 @@ cc.Class({
         this.mapLabel.active = false;
         this.countDownLabel.active = false;
 
-        // test lấy sự kiện trực tiếp
-        this._onEndWave = this.startEndCountdown.bind(this);
-        Emitter.instance.registerEvent(MonsterEventKey.END_WAVE, this._onEndWave);
-
+        this._onPlayerDead = this.onPlayerDead.bind(this);
+        Emitter.instance.registerEvent(PlayerEventKey.PLAYER_DIED, this._onPlayerDead);
     },
 
     start() {
@@ -54,8 +54,8 @@ cc.Class({
 
 
     startBattle(mapId = null) {
-        let selectedMap;
         const maps = mapData.maps;
+        let selectedMap;
         if (mapId !== null && mapId !== undefined) {
             selectedMap = maps.find(m => m.id === mapId);
         } else {
@@ -67,6 +67,7 @@ cc.Class({
         const lanePos = this.laneManager.returnListSpawn();
         const waveData = selectedMap.waves;
         this.endTime = selectedMap.endTime || 15;
+
         let total = 0;
         for (const wave of waveData) {
             for (const monster of wave) {
@@ -75,32 +76,63 @@ cc.Class({
         }
         this.totalMonsters = total;
         this.deadCount = 0;
+        this.winDeclared = false;
+        this.isPlayerDead = false;
+
         this.monsterController.init(this.monsterLayer, lanePos);
-        this.waveController.init(waveData, this.monsterController, this.endTime);
-        this.waveController.startWaves();
+        this.waveController.init(waveData, this.monsterController);
+        this.waveController.startWaves(() => this.onWaveFinished());
     },
 
-    onMonsterDied() {
-        this.deadCount++;
-        if (this.deadCount >= this.totalMonsters) {
-            this.waveController.cancelEndCountdown();
-
-
-        }
+    onWaveFinished() {
+        this.startEndCountdown();
     },
 
-    clearGame() {
-        this.monsterController.clearAll();
-        this.waveController.clear();
-        Emitter.instance.removeEvent(EventKey.END_WAVE, this._onEndWave);
+    startEndCountdown() {
+        if (this.countdownTimer != null) return;
+
+        this.countdownTimer = this.endTime;
+
+        this.endTimeCallback = () => {
+            if (this.countdownTimer > 0) {
+                cc.log(this.countdownTimer);
+                this.countDownLabel.getComponent(cc.Label).string = this.countdownTimer;
+            } else {
+                this.countDownLabel.getComponent(cc.Label).string = "Kết Thúc";
+                this.unschedule(this.endTimeCallback);
+                this.scheduleOnce(() => {
+                    this.countDownLabel.active = false;
+                    // this.calculateScore();
+                }, 1);
+                return;
+            }
+            this.countdownTimer--;
+            this.countDownLabel.active = true;
+        };
+
+        this.schedule(this.endTimeCallback, 1);
     },
+
+    onPlayerDead() {
+        this.isPlayerDead = true;
+    },
+
+    // calculateScore() {
+    //     const deadCount = this.monsterController.getDeadCount();
+    //     const currentHP = this.playerController.getCurrentHealt();
+
+    //     cc.log(deadCount, currentHP);
+
+    //     const score = this.scoreCal.calculate(deadCount, currentHP, this.isPlayerDead);
+    //     cc.log("[BattleController] Điểm cuối cùng:", score);
+    // },
 
     showMapLabel(selectedMap) {
         this.mapLabel.getComponent(cc.Label).string = selectedMap.name;
         this.mapLabel.active = true;
         this.mapLabel.opacity = 0;
 
-        cc.tween(this.mapName)
+        cc.tween(this.mapLabel)
             .to(2.5, { opacity: 255 })
             .delay(1.5)
             .to(1.5, { opacity: 0 })
@@ -111,37 +143,11 @@ cc.Class({
             .start();
     },
 
-    startEndCountdown() {
-        if (this.countdownTimer != null) return;
 
-        this.countdownTimer = this.endTime;
-        this.countDownLabel.active = true;
-
-        this.endTimeCallback = () => {
-            const remaining = this.monsterController.monsters;
-
-            if (remaining <= 0) {
-                this.stopCountdownIfRunning();
-                this.countDownLabel.getComponent(cc.Label).string = "WIN";
-                return;
-            }
-
-            if (this.countdownTimer > 0) {
-                this.countDownLabel.getComponent(cc.Label).string = this.countdownTimer;
-            } else {
-                this.countDownLabel.getComponent(cc.Label).string = "LOSE";
-                this.unschedule(this.endTimeCallback);
-                this.scheduleOnce(() => {
-                    this.countDownLabel.active = false;
-                }, 1);
-                
-                return;
-            }
-
-            this.countdownTimer--;
-        };
-
-        this.schedule(this.endTimeCallback, 1);
+    clearGame() {
+        this.monsterController.clearAll();
+        this.waveController.clear();
     },
+
 
 });
