@@ -13,6 +13,12 @@ cc.Class({
 	onLoad() {
 		this.node.active = false;
 	},
+	setData(data) {
+		this.data = data;
+	},
+	getData() {
+		return this.data;
+	},
 	show() {
 		this.node.active = true;
 	},

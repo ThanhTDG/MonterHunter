@@ -1,17 +1,14 @@
 const Emitter = require("../Event/Emitter");
 
-const { SceneName } = require("../Enum/SceneName");
+const { SceneName } = require("../Enum/Scene");
 const StateController = require("javascript-state-machine");
 const STATE = {
 	LOADING: "loading",
 	LOBBY: "lobby",
 	BATTLE: "battle",
 };
-const TRANSITIONS = {
-	TO_LOADING: "toLoading",
-	TO_BATTLE: "toBattle",
-	TO_LOBBY: "toLobby",
-};
+const { SCENE_TRANSITIONS: TRANSITIONS } = require("../Enum/Scene");
+
 export class SceneController {
 	static _instance = null;
 
@@ -52,7 +49,7 @@ export class SceneController {
 				{
 					name: TRANSITIONS.TO_LOBBY,
 					from: [STATE.LOADING, STATE.BATTLE],
-					to: STATE.LOADING,
+					to: STATE.LOBBY,
 				},
 				{
 					name: TRANSITIONS.TO_BATTLE,
@@ -65,6 +62,9 @@ export class SceneController {
 				onToLobby: this.onToLobby.bind(this),
 			},
 		});
+	}
+	toTransition(transitionName) {
+		this.state[transitionName]();
 	}
 
 	onToBattle() {

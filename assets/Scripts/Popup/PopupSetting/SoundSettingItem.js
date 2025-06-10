@@ -1,3 +1,4 @@
+const { AudioKey } = require("../../Enum/AudioKey");
 const { SoundConfigType } = require("../../Enum/SoundConfigType");
 const { SoundController } = require("../../Sound/SoundController");
 
@@ -15,10 +16,16 @@ cc.Class({
 
     onLoad() {
         this.initialize();
+
     },
     initialize() {
         this.config = SoundController.instance.getConfig(this.soundType);
-        this.setSlider(config.volume);
+        this.setSlider(this.config.volume);
+        this.setFillSlider(this.config.volume);
+        this.registerEvents();
+    },
+    registerEvents() {
+        this.slider.node.on("slide", this.onSliderChange, this);
     },
     setSlider(value) {
         this.slider.progress = value;
@@ -29,9 +36,13 @@ cc.Class({
         this.fillSlider.node.width = width * value;
     },
     onSliderChange(event) {
-        const value = event.progress;
+        let value = event.progress;
+        const isChange = this.config.volume !== value;
+        if (!isChange) {
+            return;
+        }
+        this.setSlider(value);
         this.setFillSlider(value);
         this.config.volume = value;
-        SoundController.instance.setConfig(this.config);
     },
 });

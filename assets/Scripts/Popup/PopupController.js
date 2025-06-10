@@ -3,6 +3,7 @@ const PopupEventKeys = require("../Event/EventKeys/PopupEventKeys");
 const Emitter = require("../Event/Emitter");
 const PopupItem = require("./PopupItem");
 const { loadPrefabs } = require("../Utils/FileUtils");
+const { PopupType } = require("../Enum/popupType");
 
 cc.Class({
 	extends: cc.Component,
@@ -16,8 +17,21 @@ cc.Class({
 	onDestroy() {
 		this.cleanup();
 	},
+
 	preLoad(onLoaded, onTotal) {
 		this.preloadPopups(onLoaded, onTotal);
+	},
+	registerEvents() {
+		this.eventMap = {
+			[PopupEventKeys.SHOW_POPUP]: this.showPopup.bind(this),
+			[PopupEventKeys.FORCE_HIDE_POPUP]: this.hidePopup.bind(this),
+			[PopupEventKeys.HIDE_SETTING_POPUP]: () => {
+				this.hideTopPopup(PopupType.SETTING);
+			},
+			[PopupEventKeys.HIDE_POPUP]: this.hideTopPopup.bind(this),
+			[PopupEventKeys.HIDE_ALL_POPUPS]: this.hideAllPopups.bind(this),
+		};
+		Emitter.instance.registerEventMap(this.eventMap);
 	},
 	initializeSetup() {
 		this.openStack = [];
@@ -26,12 +40,14 @@ cc.Class({
 		cc.game.addPersistRootNode(this.node);
 		this.centerOnScreen();
 	},
-	showPopup(type) {
-
+	showPopup(type, data = null) {
 		if (this.isPopupOpen(type)) {
 			return;
 		}
 		const popup = this.popupMap[type];
+		if (data) {
+			popup.setData(data);
+		}
 		popup.show();
 		this.openStack.push(type);
 	},
@@ -77,15 +93,7 @@ cc.Class({
 		this.node.setPosition(canvas.getPosition());
 		this.node.zIndex = 1000;
 	},
-	registerEvents() {
-		this.eventMap = {
-			[PopupEventKeys.SHOW_POPUP]: this.showPopup.bind(this),
-			[PopupEventKeys.FORCE_HIDE_POPUP]: this.hidePopup.bind(this),
-			[PopupEventKeys.HIDE_POPUP]: this.hideTopPopup.bind(this),
-			[PopupEventKeys.HIDE_ALL_POPUPS]: this.hideAllPopups.bind(this),
-		};
-		Emitter.instance.registerEventMap(this.eventMap);
-	},
+
 
 	isPopupOpen(type) {
 		return this.openStack.includes(type);
