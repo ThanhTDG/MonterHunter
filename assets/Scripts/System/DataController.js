@@ -60,6 +60,12 @@ export class DataController {
     getSelectedMapId() {
         return this.selectedMapId;
     }
+    getCurrentMap() {
+        if (!this.selectedMapId) {
+            throw new Error("No map selected");
+        }
+        return this.mapConfigs.find(map => map.id === this.selectedMapId);
+    }
 
     getSelectedMap() {
         if (!this.selectedMapId) {

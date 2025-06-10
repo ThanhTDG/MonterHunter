@@ -1,6 +1,7 @@
 const Emitter = require("../Event/Emitter");
 const PlayerEventKey = require("../Event/EventKeys/PlayerEventKey");
 const BattleEventKey = require("../Event/EventKeys/BattleEventKey");
+const { DataController } = require("../System/DataController");
 cc.Class({
     extends: cc.Component,
 
@@ -42,7 +43,7 @@ cc.Class({
 
     startGame(mapId = null) {
         let selectedMap;
-        const maps = mapData.maps;
+        const maps = DataController.instance.getMa.maps;
         if (mapId !== null && mapId !== undefined) {
             selectedMap = maps.find(m => m.id === mapId);
         } else {
