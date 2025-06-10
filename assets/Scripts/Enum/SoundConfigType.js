@@ -1,5 +1,5 @@
 export const SoundConfigType = cc.Enum({
-    MASTER: "MASTER",
-    MUSIC: "MUSIC",
-    EFFECT: "EFFECT",
+    MASTER: 0,
+    MUSIC: 1,
+    EFFECT: 2,
 });

@@ -1,5 +1,5 @@
-const BulletEventKey = require("../Event/EventKeys/BulletEventKey");
-const Emitter = require("../Event/Emitter");
+const Emitter = require("../../Event/Emitter");
+const BulletEventKey = require("../../Event/EventKeys/BulletEventKey");
 
 cc.Class({
     extends: cc.Component,
@@ -21,7 +21,8 @@ cc.Class({
         this.checkOutOfscene();
     },
     checkOutOfscene() {
-        if (this.node.x + this.node.width / 2 > cc.winSize.width) {
+        const worldPosition = this.node.parent.convertToWorldSpaceAR(this.node.position);
+        if (worldPosition.x + this.node.width / 2 > cc.winSize.width) {
             this.onDestroyBullet();
         }
     },

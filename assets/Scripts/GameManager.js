@@ -1,15 +1,16 @@
-const { SceneName } = require("./Enum/SceneName");
+const { SceneName, SCENE_TRANSITIONS } = require("./Enum/Scene");
 const Emitter = require("./Event/Emitter");
 const loadingEventsKeys = require("./Event/EventKeys/LoadingEventKeys");
-const { EXIT } = require("./Event/EventKeys/SystemEventKeys");
+const { EXIT_GAME } = require("./Event/EventKeys/SystemEventKeys");
 const { SoundController } = require("./Sound/SoundController");
+const { DataController } = require("./System/DataController");
 const { SceneController } = require("./System/SceneController");
 
 const AssetType = {
 	SOUND: "sound",
 	SCENE: "scene",
 	POPUP: "popup",
-
+	DATA: "data",
 }
 
 cc.Class({
@@ -29,36 +30,44 @@ cc.Class({
 	registerEvents() {
 		this.eventMap = {
 			[loadingEventsKeys.START_LOADING]: this.startLoading.bind(this),
-			[EXIT]: this.terminate.bind(this),
+			[EXIT_GAME]: this.terminate.bind(this),
 		};
 		Emitter.instance.registerEventMap(this.eventMap);
 	},
 	startLoading() {
-		const totalAssets = {
-			[AssetType.SOUND]: 0,
-			[AssetType.SCENE]: 0,
-			[AssetType.POPUP]: 0
-		};
-		const loadedCount = Object.assign({}, totalAssets);
-		let lastPercent = 0
+		const totalAssets = this.createAssetMap(0);
+		const loadedCount = this.createAssetMap(0);
+		let lastPercent = 0;
+
 		const checkLoaded = (type) => {
 			loadedCount[type]++;
 			lastPercent = this.handleLoading(loadedCount, totalAssets, lastPercent);
 		};
+
 		const onTotal = (type, amount) => {
 			totalAssets[type] += amount;
 		};
 
-		const preload = (controller, type) => {
+		const preLoad = (controller, type) => {
 			controller.preLoad(
 				() => checkLoaded(type),
 				(amount) => onTotal(type, amount)
 			);
 		};
-		preload(SoundController.instance, AssetType.SOUND);
-		preload(SceneController.instance, AssetType.SCENE);
-		preload(this.popupController, AssetType.POPUP);
+
+		preLoad(SoundController.instance, AssetType.SOUND);
+		preLoad(SceneController.instance, AssetType.SCENE);
+		preLoad(this.popupController, AssetType.POPUP);
+		preLoad(DataController.instance, AssetType.DATA);
 	},
+
+	createAssetMap(defaultValue) {
+		return Object.values(AssetType).reduce((acc, type) => {
+			acc[type] = defaultValue;
+			return acc;
+		}, {});
+	},
+
 	getTotalAsset(map) {
 		return Object.values(map).reduce((total, count) => total + count, 0);
 	},
@@ -86,7 +95,8 @@ cc.Class({
 	},
 	emitLoadingComplete() {
 		const loadedCallback = () => {
-			SceneController.instance.loadScene(SceneName.LOBBY);
+			const transition = SCENE_TRANSITIONS.TO_LOBBY;
+			SceneController.instance.toTransition(transition);
 		};
 		Emitter.instance.emit(loadingEventsKeys.LOADING_COMPLETE, loadedCallback);
 	},

@@ -183,14 +183,14 @@
       "__id__": 1
     },
     "asset": {
-      "__id__": 0
+      "__uuid__": "b19707d0-977d-45f1-bc2b-a86414688b51"
     },
     "fileId": "c4u5beQKhCL6w0nI3dch2r",
     "sync": false
   },
   {
     "__type__": "cc.Node",
-    "_name": "trength",
+    "_name": "StrengthIcon",
     "_objFlags": 0,
     "_parent": {
       "__id__": 1
@@ -286,14 +286,14 @@
       "__id__": 1
     },
     "asset": {
-      "__id__": 0
+      "__uuid__": "b19707d0-977d-45f1-bc2b-a86414688b51"
     },
     "fileId": "0clja/mHJBFpJjiHQfNPrq",
     "sync": false
   },
   {
     "__type__": "cc.Node",
-    "_name": "New Label",
+    "_name": "SkillLabel",
     "_objFlags": 0,
     "_parent": {
       "__id__": 1
@@ -389,7 +389,7 @@
       "__id__": 1
     },
     "asset": {
-      "__id__": 0
+      "__uuid__": "b19707d0-977d-45f1-bc2b-a86414688b51"
     },
     "fileId": "e0bfyDcS1LCY4yVZTH7Ork",
     "sync": false
@@ -419,7 +419,7 @@
       "__id__": 1
     },
     "_enabled": true,
-    "cooldownTime": 5,
+    "cooldownTime": 10,
     "cooldownLabel": {
       "__id__": 9
     },
@@ -497,7 +497,7 @@
       "__id__": 1
     },
     "asset": {
-      "__id__": 0
+      "__uuid__": "b19707d0-977d-45f1-bc2b-a86414688b51"
     },
     "fileId": "77Buxp8EVMCZ0QOBBXl0sR",
     "sync": false

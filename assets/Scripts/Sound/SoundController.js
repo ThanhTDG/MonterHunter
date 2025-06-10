@@ -1,19 +1,24 @@
-const { loadAudioClip } = require("../Utils/FileUtils");
-const { AudioItem } = require("./AudioItem");
+const { loadAudioClip } = require("../Utils/IOUtils");
 const { AudioKey, AudioPath } = require("./AudioConfigs");
 const { SoundConfigType: ConfigType } = require("../Enum/SoundConfigType");
 const { SoundConfigValidator, SoundConfigItem } = require("./SoundConfigItem");
-const EventKey = require("../Event/EventKeys/SoundEventKeys");
-const Emitter = require("../Event/Emitter");
+
+class PlayingItem {
+	constructor(id, type, key) {
+		this.id = id;
+		this.type = type;
+		this.key = key;
+	}
+}
+
 export class SoundController {
 	static _instance = null;
 
 	constructor() {
+		this.playing = [];
 		this.configMap = {};
 		this.audioMap = {};
-		this.eventMap = {};
 		this.initializeMaps();
-		this.registerEvents();
 	}
 
 	static get instance() {
@@ -23,32 +28,22 @@ export class SoundController {
 		return SoundController._instance;
 	}
 
+	static playSound(audioKey, loop = false) {
+		this._instance.playSound(audioKey, loop);
+	}
+
 	initializeMaps() {
 		Object.values(ConfigType).forEach((type) => {
 			this.configMap[type] = SoundConfigItem.createDefault(type);
 		});
 		Object.keys(AudioKey).forEach((key) => {
-			this.audioMap[key] = AudioItem.createDefault();
+			this.audioMap[key] = null; // chỉ lưu clip
 		});
-	}
-	registerEvents() {
-		this.eventMap = {
-			[EventKey.PLAY_SOUND]: this.playSound.bind(this),
-			[EventKey.STOP_SOUND]: this.stopSound.bind(this),
-			[EventKey.SET_SOUND_CONFIG]: this.setConfig.bind(this),
-			[EventKey.SET_DEFAULT_SOUND_CONFIG]: this.setDefault.bind(this),
-			[EventKey.SET_ALL_DEFAULT_SOUND_CONFIG]: this.setAllDefault.bind(this),
-			[EventKey.GET_SOUND_CONFIG]: this.getConfig.bind(this),
-			[EventKey.GET_ALL_SOUND_CONFIG]: this.getConfigMap.bind(this),
-		};
-		Emitter.instance.registerEventMap(this.eventMap);
 	}
 
 	preLoad(onLoaded, onLoad) {
 		const files = Object.keys(AudioPath);
-		if (onLoad) {
-			onLoad(files.length);
-		}
+		if (onLoad) onLoad(files.length);
 		files.forEach((key) => {
 			const name = AudioPath[key];
 			loadAudioClip(name, (audioClip) => {
@@ -59,38 +54,88 @@ export class SoundController {
 	}
 
 	playSound(audioKey, loop = false) {
-		const audioItem = this.getAudioItem(audioKey);
+		const clip = this.getAudioClip(audioKey);
 		const type = this.getTypeByKey(audioKey);
-		if (!audioItem.hasClip()) {
-			cc.error(`Audio item or clip not found for key: ${audioKey}`);
+		if (!clip) {
+			cc.warn(`Audio clip not found for key: ${audioKey}`);
 			return;
 		}
-		const id = this.play(type, audioItem.getClip(), loop);
+		const id = this.play(type, clip, loop);
 		if (id == null) {
 			cc.error(`Failed to play sound for key: ${audioKey}`);
 			return;
 		}
 		if (!loop) {
 			cc.audioEngine.setFinishCallback(id, () => {
-				audioItem.setId(null);
+				this.removePlayingItem(id);
 			});
 		}
-		audioItem.setId(id);
+		this.addPlayingItem(id, type, audioKey);
 	}
+
+	addPlayingItem(id, type, key) {
+		this.playing.push(new PlayingItem(id, type, key));
+	}
+
+	removePlayingItem(id) {
+		this.playing = this.playing.filter(item => item.id !== id);
+	}
+
+	getPlayingItemByKey(key) {
+		return this.playing.find(item => item.key === key);
+	}
+
+	stopSound(audioKey) {
+		const playingItem = this.getPlayingItemByKey(audioKey);
+		if (playingItem) {
+			cc.audioEngine.stop(playingItem.id);
+			this.removePlayingItem(playingItem.id);
+		}
+	}
+
+	stopAllSound() {
+		cc.audioEngine.stopAll();
+		this.playing = [];
+	}
+
+	pauseSound(audioKey) {
+		const playingItem = this.getPlayingItemByKey(audioKey);
+		if (playingItem) {
+			cc.audioEngine.pause(playingItem.id);
+		}
+	}
+
+	pauseAll(type) {
+		this.playing.forEach(item => {
+			if (item.type === type || type === ConfigType.MASTER) {
+				cc.audioEngine.pause(item.id);
+			}
+		});
+	}
+
+	resumeAll(type) {
+		this.playing.forEach(item => {
+			if (item.type === type || type === ConfigType.MASTER) {
+				cc.audioEngine.resume(item.id);
+			}
+		});
+	}
+
+	updateVolume(type) {
+		this.playing.forEach(item => {
+			if (item.type === type || type === ConfigType.MASTER) {
+				this.setVolume(item.id, item.type);
+			}
+		});
+	}
+
 	getConfigMap() {
 		return this.configMap;
 	}
 
-	stopSound(audioKey) {
-		const audioItem = this.getAudioItem(audioKey);
-		if (audioItem && audioItem.getId() != null) {
-			cc.audioEngine.stop(audioItem.getId());
-			audioItem.setId(null);
-		}
-	}
-
 	setDefault(type) {
-		this.configMap[type] = SoundConfigItem.createDefault(type);
+		const defaultItem = SoundConfigItem.createDefault(type);
+		this.configMap[type].applyConfig(defaultItem);
 		this.updateVolume(type);
 	}
 
@@ -113,29 +158,9 @@ export class SoundController {
 		return this.configMap[type];
 	}
 
-	getAudioItem(audioKey) {
-		if (!this.audioMap[audioKey]) {
-			cc.error(`Invalid audio key: ${audioKey}`);
-			return null;
-		}
-		return this.audioMap[audioKey];
-	}
-
-	setConfig(config) {
-		const { type } = config;
-		this.configMap[type] = config;
+	setConfig(type, config) {
+		this.configMap[type].applyConfig(config);
 		this.updateVolume(type);
-	}
-
-	updateVolume(type) {
-		Object.keys(this.audioMap).forEach((key) => {
-			const audioItem = this.getAudioItem(key);
-			const soundType = this.getTypeByKey(key);
-			if (!audioItem || !soundType) return;
-			if (soundType === type || type === ConfigType.MASTER) {
-				this.setVolume(audioItem.getId(), soundType);
-			}
-		});
 	}
 
 	calculateVolume(type) {
@@ -148,9 +173,7 @@ export class SoundController {
 	}
 
 	setVolume(id, type) {
-		if (id == null) {
-			return;
-		}
+		if (id == null) return;
 		const volume = this.calculateVolume(type);
 		cc.audioEngine.setVolume(id, volume);
 	}
@@ -161,44 +184,32 @@ export class SoundController {
 	}
 
 	setAudioClip(key, clip) {
-		const audioItem = this.getAudioItem(key);
-		if (audioItem.getClip() !== null) {
-			cc.loader.releaseAsset(audioItem.getClip());
+		const oldClip = this.audioMap[key];
+		if (oldClip) {
+			cc.loader.releaseAsset(oldClip);
 		}
-		audioItem.setClip(clip);
-	}
-	getAudioClip(key) {
-		const audioItem = this.getAudioItem(key);
-		return audioItem.getClip();
+		this.audioMap[key] = clip;
 	}
 
-	stopAllSound() {
-		cc.audioEngine.stopAll();
-		Object.values(this.audioMap).forEach((audioItem) => {
-			if (audioItem) audioItem.setId(null);
-		});
+	getAudioClip(key) {
+		return this.audioMap[key];
 	}
 
 	releaseSounds() {
-		const files = Object.keys(AudioPath);
-		files.forEach((key) => {
-			const clip = this.getAudioClip(key);
+		Object.keys(this.audioMap).forEach((key) => {
+			const clip = this.audioMap[key];
 			if (clip) {
 				cc.loader.releaseAsset(clip);
-				this.setAudioClip(key, null);
+				this.audioMap[key] = null;
 			}
 		});
 	}
-	removeEvents() {
-		Emitter.instance.removeEventMap(this.eventMap);
-	}
 
 	destroy() {
+		this.releaseSounds();
 		this.configMap = null;
 		this.audioMap = null;
 		cc.audioEngine.stopAll();
-		this.removeEvents();
-		this.releaseSounds();
 		SoundController._instance = null;
 	}
 }
