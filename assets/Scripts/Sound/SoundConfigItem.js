@@ -3,9 +3,9 @@ const { SoundConfigType: ConfigType } = require("../Enum/SoundConfigType");
 
 class Config {
 	static default = {
-		[ConfigType.MASTER]: { volume: 1.0, enable: true },
-		[ConfigType.MUSIC]: { volume: 1.0, enable: true },
-		[ConfigType.EFFECT]: { volume: 1.0, enable: true },
+		[ConfigType.MASTER]: { volume: 0.75, enable: true },
+		[ConfigType.MUSIC]: { volume: 0.75, enable: true },
+		[ConfigType.EFFECT]: { volume: 0.75, enable: true },
 	};
 
 	static get(type) {
@@ -42,6 +42,11 @@ export class SoundConfigItem {
 		this.type = type;
 		this.volume = volume;
 		this.enable = enable;
+	}
+	applyConfig(config) {
+		this.type = config.type;
+		this.volume = config.volume;
+		this.enable = config.enable;
 	}
 
 	setVolume(volume) {
