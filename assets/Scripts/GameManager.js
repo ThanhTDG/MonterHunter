@@ -49,7 +49,6 @@ cc.Class({
 		};
 
 		const preLoad = (controller, type) => {
-			console.log(`Preloading ${type}...`);
 			controller.preLoad(
 				() => checkLoaded(type),
 				(amount) => onTotal(type, amount)

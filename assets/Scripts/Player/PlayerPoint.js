@@ -1,6 +1,6 @@
-import { LocalStorage } from "../Enum/LocalStorage";
-import { PlayerPointType } from "../Enum/PlayerPointType";
-import { getFromLocalStorage, setToLocalStorage } from "../Utils/IOUtils";
+const { LocalStorage } = require("../Enum/LocalStorage");
+const { PlayerPointType } = require("../Enum/PlayerPointType");
+const { getFromLocalStorage, setToLocalStorage } = require("../Utils/IOUtils");
 
 
 export const PlayerBonusStats = {

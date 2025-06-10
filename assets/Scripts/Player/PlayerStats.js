@@ -1,4 +1,4 @@
-class PlayerStats {
+export class PlayerStats {
     constructor({ hp = 100, damage = 20, shootSpeed = 0.5, moveSpeed = 500 } = {}) {
         this.hp = hp;
         this.damage = damage;

@@ -1,6 +1,7 @@
-import { PlayerPoint } from "../Player/PlayerPoint";
-import { PlayerRecord } from "../Player/PlayerRecord";
-import MapConfigs from "./MapConfigs";
+const { PlayerPoint } = require("../Player/PlayerPoint");
+const { PlayerRecord } = require("../Player/PlayerRecord");
+const { PlayerStats } = require("../Player/PlayerStats");
+const { MapConfigs } = require("./MapConfigs");
 
 export class DataController {
     static _instance = null;
@@ -24,6 +25,14 @@ export class DataController {
             throw new Error(`Selected map ID does not match the provided map ID: ${mapId}`);
         }
         this.playerRecord.setMapRecord(mapId, score);
+    }
+    getPLayerStats() {
+        this.playerStats.clone();
+    }
+
+    setSkillPoint(type, value) {
+        this.playerPoint.setPoint(type, value);
+        this.setPlayerStats(this.playerPoint);
     }
 
     getHighestMapCanSelect() {
@@ -63,11 +72,11 @@ export class DataController {
         this.playerPoint = PlayerPoint.preLoad(onLoaded, onLoad);
         this.playerRecord = PlayerRecord.preLoad(onLoaded, onLoad);
         this.mapConfigs = MapConfigs;
+        this.setPlayerStats(this.playerPoint);
         this.resetSelectedMap();
-        this.setupPlayerStats(this.playerPoint);
     }
 
-    setupPlayerStats(playerPoint) {
+    setPlayerStats(playerPoint) {
         let playerStats = PlayerStats.createDefault();
         playerStats.applyBonusStats(playerPoint.toPlayerBonusStats());
         this.playerStats = playerStats;
@@ -80,6 +89,5 @@ export class DataController {
     resetSelectedMap() {
         this.selectedMapId = this.getHighestMapCanSelect();
     }
-
 
 }

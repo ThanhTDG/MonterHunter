@@ -1,5 +1,5 @@
-import { LocalStorage } from "../Enum/LocalStorage";
-import { getFromLocalStorage } from "../Utils/IOUtils";
+const { LocalStorage } = require("../Enum/LocalStorage");
+const { getFromLocalStorage } = require("../Utils/IOUtils");
 
 export class MapItemRecord {
     constructor(mapId = 0, score = 0) {
