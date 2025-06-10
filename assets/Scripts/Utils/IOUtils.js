@@ -35,3 +35,10 @@ export const loadPrefabs = (path, callback) => {
 	path = "Prefabs/" + path;
 	loadDirectory(path, callback, cc.Prefab);
 };
+
+export const getFromLocalStorage = (key) => {
+	return JSON.parse(cc.sys.localStorage.getItem(key));
+}
+export const setToLocalStorage = (key, data) => {
+	cc.sys.localStorage.setItem(key, JSON.stringify(data));
+}
