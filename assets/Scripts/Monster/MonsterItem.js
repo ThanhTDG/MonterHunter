@@ -1,4 +1,4 @@
-const EventKey = require('MonsterEventKey');
+const MonsterEventKey = require('MonsterEventKey');
 const Emitter = require('Emitter');
 const StateMachine = require('javascript-state-machine');
 const MonsterState = require('MonsterState');
@@ -152,7 +152,7 @@ cc.Class({
     handleDeath() {
         this.stopAttacking();
 
-        Emitter.instance.emit(EventKey.MONSTER_DIED); // sự kiện bị kill
+        Emitter.instance.emit(MonsterEventKey.MONSTER_DIED); // sự kiện bị kill
 
         if (this.moveTween) {
             this.moveTween.stop();
@@ -172,7 +172,7 @@ cc.Class({
     attackPlayer() {
         if (!this.canAttack || this.fsm.is(MonsterState.State.DEAD)) return;
 
-        Emitter.instance.emit(EventKey.PLAYER_ATTACKED, { // sự kiện đánh player
+        Emitter.instance.emit(MonsterEventKey.PLAYER_ATTACKED, { // sự kiện đánh player
             monsterId: this.id,
             damage: this.damage,
             type: this.type
@@ -214,7 +214,7 @@ cc.Class({
         if (other.node.group === EntityGroup.BOUNDARY) {
             this.stopAttacking();
             this.node.destroy();
-            Emitter.instance.emit(EventKey.MONSTER_END);
+            Emitter.instance.emit(MonsterEventKey.MONSTER_END);
         }
     },
 

@@ -1,14 +1,27 @@
 const Emitter = require("../Event/Emitter");
 const PlayerEventKey = require("../Event/EventKeys/PlayerEventKey");
 const BattleEventKey = require("../Event/EventKeys/BattleEventKey");
+const MonsterEventKey = require('MonsterEventKey');
+const mapData = require('mapData');
 cc.Class({
     extends: cc.Component,
 
     properties: {
-        Lanes: cc.Node,
         waveController: require('WaveController'),
         monsterController: require('MonsterController'),
         laneManager: require('LaneManager'),
+        monsterLayer: cc.Node,
+        mapLabel: cc.Node,
+        countDownLabel: cc.Node,
+    },
+    onLoad() {
+        this.mapLabel.active = false;
+        this.countDownLabel.active = false;
+
+        // test lấy sự kiện trực tiếp
+        this._onEndWave = this.startEndCountdown.bind(this);
+        Emitter.instance.registerEvent(MonsterEventKey.END_WAVE, this._onEndWave);
+
     },
 
     start() {
@@ -20,9 +33,9 @@ cc.Class({
         collisionManager.enabled = true;
         collisionManager.enabledDebugDraw = true;
 
-        this.listLane = this.Lanes.getComponent('LaneManager').returnListSpawn();
+        this.listLane = this.laneManager.returnListSpawn();
         this.initPlayerData();
-        this.startGame();
+        this.startBattle();
     },
 
     initPlayerData() {
@@ -40,7 +53,7 @@ cc.Class({
     },
 
 
-    startGame(mapId = null) {
+    startBattle(mapId = null) {
         let selectedMap;
         const maps = mapData.maps;
         if (mapId !== null && mapId !== undefined) {
@@ -48,9 +61,12 @@ cc.Class({
         } else {
             selectedMap = maps[maps.length - 1];
         }
+
+        this.showMapLabel(selectedMap);
+
         const lanePos = this.laneManager.returnListSpawn();
         const waveData = selectedMap.waves;
-        const endTime = selectedMap.endTime || 15;
+        this.endTime = selectedMap.endTime || 15;
         let total = 0;
         for (const wave of waveData) {
             for (const monster of wave) {
@@ -60,23 +76,72 @@ cc.Class({
         this.totalMonsters = total;
         this.deadCount = 0;
         this.monsterController.init(this.monsterLayer, lanePos);
-        this.waveController.init(waveData, this.monsterController, endTime);
+        this.waveController.init(waveData, this.monsterController, this.endTime);
         this.waveController.startWaves();
-        // Emitter.instance.on(EventKey.MONSTER_END, xxx, this); nhận sự kiện end lane not kill
-        // Emitter.instance.on(EventKey.MONSTER_DIE, onMonsterDied(), this); //nhận sự kiện bị kill
     },
 
     onMonsterDied() {
         this.deadCount++;
         if (this.deadCount >= this.totalMonsters) {
             this.waveController.cancelEndCountdown();
-            Emitter.instance.emit(EventKey.END_GAME);
+
+
         }
     },
 
     clearGame() {
         this.monsterController.clearAll();
         this.waveController.clear();
-        // Emitter.instance.off(EventKey.MONSTER_END, this.onMonsterDied, this);
-    }
+        Emitter.instance.removeEvent(EventKey.END_WAVE, this._onEndWave);
+    },
+
+    showMapLabel(selectedMap) {
+        this.mapLabel.getComponent(cc.Label).string = selectedMap.name;
+        this.mapLabel.active = true;
+        this.mapLabel.opacity = 0;
+
+        cc.tween(this.mapName)
+            .to(2.5, { opacity: 255 })
+            .delay(1.5)
+            .to(1.5, { opacity: 0 })
+            .call(() => {
+                this.mapLabel.active = false;
+                this.mapLabel.opacity = 255;
+            })
+            .start();
+    },
+
+    startEndCountdown() {
+        if (this.countdownTimer != null) return;
+
+        this.countdownTimer = this.endTime;
+        this.countDownLabel.active = true;
+
+        this.endTimeCallback = () => {
+            const remaining = this.monsterController.monsters;
+
+            if (remaining <= 0) {
+                this.stopCountdownIfRunning();
+                this.countDownLabel.getComponent(cc.Label).string = "WIN";
+                return;
+            }
+
+            if (this.countdownTimer > 0) {
+                this.countDownLabel.getComponent(cc.Label).string = this.countdownTimer;
+            } else {
+                this.countDownLabel.getComponent(cc.Label).string = "LOSE";
+                this.unschedule(this.endTimeCallback);
+                this.scheduleOnce(() => {
+                    this.countDownLabel.active = false;
+                }, 1);
+                
+                return;
+            }
+
+            this.countdownTimer--;
+        };
+
+        this.schedule(this.endTimeCallback, 1);
+    },
+
 });

@@ -23,7 +23,7 @@ cc.Class({
         const script = monster.getComponent(PrefabMap[monsterData.type]);
 
         script.init(monsterData.level);
-        script.id = monsterData.id = this._generateId();
+        script.id = monsterData.id = this.generateId();
         script.type = monsterData.type;
 
         cc.log(monster);
@@ -34,7 +34,7 @@ cc.Class({
         return this.prefabList.find(p => p.name === type);
     },
 
-    _generateId() {
+    generateId() {
         return 'mon_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
     }
 });

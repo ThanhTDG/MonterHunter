@@ -20,7 +20,8 @@ cc.Class({
 
     getRandomLaneY() {
         const index = Math.floor(Math.random() * this.lanePosList.length);
-        return this.lanePosList[index];
+
+        return this.lanePosList[index].y;
     },
 
     remove(id) {

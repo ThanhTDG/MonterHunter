@@ -4,3 +4,5 @@ export const PLAYER_ATTACKED = "PLAYER_ATTACKED";
 export const COLLISION_MONSTER = "COLLISION_MONSTER";
 export const CREATE_MONSTER = "CREATE_MONSTER";
 export const GAME_LOSE = "GAME_LOSE";
+export const END_WAVE = "END_WAVE";
+export const ALL_MONSTERS_DEAD = "ALL_MONSTERS_DEAD";
