@@ -1,14 +1,23 @@
-const Emitter = require("../Event/Emitter");
-const BulletEventKey = require("../Event/EventKeys/BulletEventKey");
+const Emitter = require("../../Event/Emitter");
+const BulletEventKey = require("../../Event/EventKeys/BulletEventKey");
 
 cc.Class({
     extends: cc.Component,
 
     properties: {
         bulletPrefab: cc.Prefab,
+        ultimateBullet: cc.Prefab,
+        ultimateSpawnPos: cc.Node,
         bulletSpeed: 10,
         bullets: [],
         bulletIdCounter: 0,
+    },
+
+    onLoad() {
+        this.eventMap = {
+            [BulletEventKey.REMOVE_BULLET]: this.removeBulletById.bind(this),
+        };
+        Emitter.instance.registerEventMap(this.eventMap);
     },
 
     spawnBullet(position, damage) {
@@ -19,6 +28,17 @@ cc.Class({
 
         bullet.getComponent('BulletItem').init(this.bulletIdCounter, this.bulletSpeed, damage);
         this.bullets.push(bullet);
+        this.bulletIdCounter++;
+    },
+
+    spawnUltimateBullet(baseDamage) {
+        let ultimate = cc.instantiate(this.ultimateBullet);
+        let localPos = this.ultimateSpawnPos.position;
+        ultimate.setPosition(localPos);
+        this.node.addChild(ultimate);
+
+        ultimate.getComponent('BulletItem').init(this.bulletIdCounter, this.bulletSpeed, baseDamage * 2);
+        this.bullets.push(ultimate);
         this.bulletIdCounter++;
     },
 
@@ -34,12 +54,6 @@ cc.Class({
         if (indexToRemove >= 0) {
             this.bullets.splice(indexToRemove, 1);
         }
-    },
-    onLoad() {
-        this.eventMap = {
-            [BulletEventKey.REMOVE_BULLET]: this.removeBulletById.bind(this),
-        };
-        Emitter.instance.registerEventMap(this.eventMap);
     },
 
     clearBullet() {
