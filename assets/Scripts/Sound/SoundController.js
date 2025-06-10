@@ -1,4 +1,4 @@
-const { loadAudioClip } = require("../Utils/FileUtils");
+const { loadAudioClip } = require("../Utils/IOUtils");
 const { AudioKey, AudioPath } = require("./AudioConfigs");
 const { SoundConfigType: ConfigType } = require("../Enum/SoundConfigType");
 const { SoundConfigValidator, SoundConfigItem } = require("./SoundConfigItem");
