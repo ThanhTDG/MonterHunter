@@ -10,6 +10,7 @@ cc.Class({
         spine: sp.Skeleton,
         bulletController: cc.Node,
         bulletPos: cc.Node,
+        playerHp: cc.ProgressBar,
     },
 
     onLoad() {
@@ -24,18 +25,15 @@ cc.Class({
 
     onInit({ playerData, listLane }) {
         this.hp = playerData.hp;
+        this.maxHp = playerData.hp;
         this.damage = playerData.damage;
         this.shootSpeed = playerData.shootSpeed;
         this.originalShootSpeed = playerData.shootSpeed;
         this.moveSpeed = playerData.moveSpeed;
 
-
         this.setUpLane(listLane);
         this.setupFSM();
-    },
-
-    getCurrentHealth(){
-        return this.hp;
+        this.updateHpBar();
     },
 
     setupFSM() {
@@ -46,17 +44,20 @@ cc.Class({
                 { name: PlayerState.Transition.MOVE, from: [PlayerState.State.SHOOTING], to: PlayerState.State.MOVING },
                 { name: PlayerState.Transition.STOP, from: [PlayerState.State.MOVING, PlayerState.State.SHOOTING], to: PlayerState.State.STOP },
                 { name: PlayerState.Transition.SHOOT, from: [PlayerState.State.STOP, PlayerState.State.READY, PlayerState.State.SHOOTING], to: PlayerState.State.SHOOTING },
+                { name: PlayerState.Transition.DIE, from: '*', to: PlayerState.State.DEAD },
             ],
             methods: {
                 onInitialize: () => this.playPortalAnimation(),
                 onMove: () => this.moveToTarget(),
                 onStop: () => this.stopActions(),
                 onShoot: () => this.startShooting(),
+                onDie: () => this.handleDeath(),
             },
         });
 
         this.fsm.initialize();
     },
+
 
     setUpLane(listLane) {
         this.listPlayerPos = listLane.map(laneWorldPos => {
@@ -81,6 +82,7 @@ cc.Class({
         }
     },
 
+
     onPlayerMove(direction) {
         if (!this.fsm.is("shooting")) {
             cc.log(`Cannot move. Current state: ${this.fsm.state}`);
@@ -95,8 +97,6 @@ cc.Class({
             this.currentLaneIndex--;
             this.targetPos = this.listPlayerPos[this.currentLaneIndex];
             this.fsm.move();
-        } else {
-            cc.log("Already at top lane");
         }
     },
 
@@ -105,8 +105,6 @@ cc.Class({
             this.currentLaneIndex++;
             this.targetPos = this.listPlayerPos[this.currentLaneIndex];
             this.fsm.move();
-        } else {
-            cc.log("Already at bottom lane");
         }
     },
 
@@ -119,8 +117,13 @@ cc.Class({
         cc.tween(this.node)
             .to(duration, { position: this.targetPos }, { easing: "smooth" })
             .call(() => {
-                this.fsm.stop();
-                this.fsm.shoot();
+                if (this.fsm.can('stop')) {
+                    this.fsm.stop();
+                }
+                if (this.fsm.can('shoot')) {
+                    this.fsm.shoot();
+                    return;
+                }
             })
             .start();
     },
@@ -143,11 +146,15 @@ cc.Class({
         const bulletWorldPos = this.bulletPos.convertToWorldSpaceAR(cc.v2(0, 0));
         this.bulletController.getComponent('BulletController').spawnBullet(bulletWorldPos, this.damage);
     },
-
     onIncreaseShootSpeed({ multiplier, duration }) {
-
+        if (!this.fsm.can('shoot')) {
+            cc.log("Player cannot shoot in the current state.");
+            return;
+        }
         this.shootSpeed /= multiplier;
+
         this.unschedule(this.spawnBullet);
+
         this.schedule(this.spawnBullet, this.shootSpeed);
 
         this.scheduleOnce(() => {
@@ -157,6 +164,43 @@ cc.Class({
         }, duration);
     },
 
+
+    getCurrentHealth() {
+        return this.hp;
+    },
+
+    updateHpBar() {
+        if (this.playerHp) {
+            this.playerHp.progress = this.hp / this.maxHp;
+        }
+    },
+
+    takeDamage(amount) {
+        this.hp = Math.max(0, this.hp - amount);
+        this.updateHpBar();
+
+        if (this.hp <= 0) {
+            this.fsm.die();
+        }
+    },
+
+    heal(amount) {
+        this.hp = Math.min(this.maxHp, this.hp + amount);
+        this.updateHpBar();
+    },
+
+    handleDeath() {
+        this.stopActions();
+
+        if (this.spine) {
+            this.spine.setAnimation(0, "death", false);
+            this.spine.setCompleteListener(() => {
+                this.clear();
+                Emitter.instance.emit(PlayerEventKey.PLAYER_DEAD);
+
+            });
+        }
+    },
     clear() {
         this.hp = 0;
         this.damage = 0;
@@ -166,13 +210,8 @@ cc.Class({
         this.listPlayerPos = [];
         this.currentLaneIndex = 0;
         this.targetPos = null;
-
-        if (this.fsm) {
-            this.fsm.clear();
-            this.fsm = null;
-        }
-
-        this.unschedule(this.spawnBullet);
+        this.fsm = null;
+        this.stopActions();
 
         if (this.spine) {
             this.spine.clearTrack(0);
