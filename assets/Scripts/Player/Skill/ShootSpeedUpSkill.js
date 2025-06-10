@@ -1,4 +1,4 @@
-const Emitter = require("../Event/Emitter");
+const Emitter = require("../../Event/Emitter");
 const PlayerEventKey = require("../Event/EventKeys/PlayerEventKey");
 const {SkillType} = require('../../Enum/SkillType');
 
