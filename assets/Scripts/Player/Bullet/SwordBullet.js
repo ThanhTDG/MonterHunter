@@ -1,6 +1,7 @@
 const Emitter = require("../../Event/Emitter");
 const BulletEventKey = require("../../Event/EventKeys/BulletEventKey");
 const BulletItem = require("./BulletItem");
+const { EntityGroup } = require("../../Enum/EntityGroup");
 
 cc.Class({
     extends: BulletItem,
@@ -44,10 +45,18 @@ cc.Class({
     },
 
     onCollisionEnter(other, self) {
-        if (other.node.group === "monster" && !this.damageTargets.includes(other.node)) {
-            this.damageTargets.push(other.node);
+        if (other.node.group !== EntityGroup.MONSTER || this.damageTargets.includes(other.node)) {
+            return;
+        }
+
+        this.damageTargets.push(other.node);
+        this.applyDamageImmediately(other.node);
+
+        if (this.staying) {
+            this.schedule(this.applyDamage, this.damageInterval);
         }
     },
+
 
     onCollisionExit(other, self) {
         const index = this.damageTargets.indexOf(other.node);
@@ -66,8 +75,14 @@ cc.Class({
         this.damageTargets = this.damageTargets.filter(target => cc.isValid(target));
 
         this.damageTargets.forEach(targetNode => {
-            Emitter.instance.emit(BulletEventKey.APPLY_DAMAGE, this.id, targetNode);
+            targetNode.getComponent('MonsterItem').takeDamageMonster(this.damage);
         });
+    },
+
+    applyDamageImmediately(targetNode) {
+        if (cc.isValid(targetNode)) {
+            targetNode.getComponent('MonsterItem').takeDamageMonster(this.damage);
+        }
     },
 
     onDestroyBullet() {

@@ -13,7 +13,7 @@ cc.Class({
 
     startWaves(onFinishedCallback) {
         this.onAllWavesFinished = onFinishedCallback;
-        this.scheduleOnce(() => this.spawnNextWave(), 1);
+        this.scheduleOnce(() => this.spawnNextWave(), 1.5);
     },
 
     scheduleNextWave(delay = 0) {
@@ -30,20 +30,14 @@ cc.Class({
         }
 
         const level = this.currentWave + 1;
-        let monsters = [];
+        const monsters = config;
 
-        config.forEach(mon => {
-            for (let i = 0; i < mon.count; i++) {
-                monsters.push({ type: mon.type, level });
-            }
-        });
-
-        monsters.forEach((mons, index) => {
+        monsters.forEach((monsterData, index) => {
             this.scheduleOnce(() => {
-                this.monsterController.spawnMonster(mons);
-            }, index * 1);
+                this.monsterController.spawnMonster(monsterData);
+            }, index * 2);
         });
-        cc.log('curOLD', this.currentWave);
+
         this.currentWave++;
         let newWave = this.currentWave;
 

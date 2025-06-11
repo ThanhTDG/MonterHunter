@@ -172,7 +172,7 @@
       "y": 0.5
     },
     "_fillStart": 0,
-    "_fillRange": 1,
+    "_fillRange": 0,
     "_isTrimmedMode": true,
     "_atlas": null,
     "_id": ""
@@ -407,7 +407,7 @@
       "__id__": 3
     },
     "_N$mode": 2,
-    "_N$progress": 1,
+    "_N$progress": 0,
     "_N$reverse": false,
     "_id": ""
   },

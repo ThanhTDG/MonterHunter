@@ -24,8 +24,16 @@ cc.Class({
     spawnMonster(monsterData) {
         const y = this.getRandomLaneY();
         const pos = cc.v2(cc.winSize.width + 150, y);
+
+        if (!monsterData.id) {
+            monsterData.id = this.generateId();
+        }
         const monster = this.monsterFactory.create(monsterData, this.monsterLayer, pos);
         this.monsters[monsterData.id] = monster;
+    },
+
+    generateId() {
+        return 'mon_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
     },
 
     getRandomLaneY() {
@@ -36,16 +44,13 @@ cc.Class({
 
     onDestroyMonster(data) {
         this.remove(data.id);
-        cc.log(`[MonsterController - đi hết màn hình hoặc end gaem] : id= ${data.id}, type= ${data.type}, deadCount= ${this.deadCount}`);
     },
 
     onMonsterDead(data) {
         this.deadCount++;
         this.remove(data.id);
-        cc.log(`[MonsterController - bị kill] die: id= ${data.id}, type= ${data.type}, deadCount= ${this.deadCount}`);
     },
 
-    // tổng quái bị giết
     getDeadCount() {
         return this.deadCount;
     },
