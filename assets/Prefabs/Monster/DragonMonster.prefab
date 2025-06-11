@@ -428,7 +428,8 @@
     },
     "maxHealth": 100,
     "currentHealth": 100,
-    "damage": 50,
+    "damage": 5,
+    "speed": 100,
     "_id": ""
   },
   {
