@@ -15,17 +15,25 @@ cc.Class({
         monsterLayer: cc.Node,
         mapLabel: cc.Node,
         countDownLabel: cc.Node,
-        waveProgress: cc.ProgressBar,
+        waveSlider: cc.Slider,
     },
     onLoad() {
         this.mapLabel.active = false;
         this.countDownLabel.active = false;
 
+        this.waveSlider.progress = 0;
+        this.waveSlider.interactable = false; 
+        this.waveSlider.enabled = false; 
+        const focus = this.waveSlider.node.getChildByName('Focus');
+        if (focus) {
+            focus.width = 0;
+        }
+
         this._onPlayerDead = this.onPlayerDead.bind(this);
         Emitter.instance.registerEvent(PlayerEventKey.PLAYER_DIED, this._onPlayerDead);
 
-        this._updateProgressBar = this.updateProgressBar.bind(this);
-        Emitter.instance.registerEvent(MonsterEventKey.NEW_WAVE, this._updateProgressBar);
+        this._updateSlider = this.updateSlider.bind(this);
+        Emitter.instance.registerEvent(MonsterEventKey.NEW_WAVE, this._updateSlider);
     },
 
     start() {
@@ -60,8 +68,6 @@ cc.Class({
 
 
     startBattle(mapId = null) {
-        this.waveProgress.progress = 0;
-
         const maps = mapData.maps;
         let selectedMap;
         if (mapId !== null && mapId !== undefined) {
@@ -75,9 +81,6 @@ cc.Class({
         const lanePos = this.laneManager.returnListSpawn();
 
         this.waveData = selectedMap.waves;
-
-
-
         this.endTime = selectedMap.endTime || 15;
 
         let total = 0;
@@ -166,16 +169,13 @@ cc.Class({
     },
 
     calculateScore() {
-        // const deadCount = this.monsterController.getDeadCount();
-        // const currentHP = this.playerController.getCurrentHealt();
-
-        const deadCount = this.monsterController.getDeadCount();
-        const currentHP = 100;
+        const deadCount = this.monsterController.getDeadCount(); 
+        const currentHP = this.playerController.getCurrentHealth(); 
 
         cc.log(deadCount, currentHP);
 
         const score = this.scoreCal.calculate(deadCount, currentHP, this.isPlayerDead);
-        cc.log("[BattleController] Điểm cuối cùng:", score);
+        cc.log("[BattleController] Last Score:", score);
     },
 
     displayMapInfo(selectedMap) {
@@ -194,16 +194,22 @@ cc.Class({
             .start();
     },
 
-    updateProgressBar(data) {
-        cc.log('ssss');
-        if (!data || data.totalWave === 0) return;
-
+    updateSlider(data) { 
         let progressValue = data.newWave / data.totalWave;
 
-        cc.tween(this.waveProgress)
+        cc.tween(this.waveSlider)
             .to(0.5, { progress: progressValue })
+            .call(() => this.updateVisual())
             .start();
+        this.schedule(() => {
+            this.updateVisual();
+        }, 0.05, 10);
 
+    },
+
+    updateVisual() {
+        const focus = this.waveSlider.node.getChildByName('Focus');
+        focus.width = this.waveSlider.node.width * this.waveSlider.progress;
     },
 
 
@@ -211,7 +217,7 @@ cc.Class({
         this.monsterController.clearAll();
         this.waveController.clear();
         Emitter.instance.removeEvent(PlayerEventKey.PLAYER_DIED, this._onPlayerDead);
-        Emitter.instance.removeEvent(PlayerEventKey.PLAYER_DIED, this._updateProgressBar);
+        Emitter.instance.removeEvent(PlayerEventKey.PLAYER_DIED, this._updateSlider);
     },
 
 

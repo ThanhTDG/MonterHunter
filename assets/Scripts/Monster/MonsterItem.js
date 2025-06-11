@@ -10,9 +10,9 @@ cc.Class({
     properties: {
         healthBar: cc.ProgressBar,
         spriteNode: cc.Node,
-        maxHealth: 100,
-        currentHealth: 100,
-        damage: 50,
+        maxHealth: 70,
+        currentHealth: 70,
+        damage: 5,
         speed: 100,
     },
 
@@ -26,7 +26,7 @@ cc.Class({
     },
 
     init(level = 1) {
-        this.maxHealth = 100 * level;
+        this.maxHealth = 70 * level;
         this.currentHealth = this.maxHealth;
         this.healthBar.progress = 1;
         this.level = level;
@@ -62,7 +62,7 @@ cc.Class({
         let moveDistance = -cc.winSize.width - 600;
         let moveTime = Math.abs(moveDistance) / this.speed;
 
-        console.log(`Quái cấp ${this.level} di chuyển với tốc độ ${this.speed}, thời gian: ${moveTime}s`);
+        console.log(`Quái cấp ${this.level} di chuyển với tốc độ ${this.speed}, thời gian: ${moveTime}s, hp: ${this.currentHealth}`);
 
         this.moveTween = cc.tween(this.node)
             .by(moveTime, { x: moveDistance })
@@ -204,9 +204,19 @@ cc.Class({
         }
     },
 
+    damagePlayer(playerNode) {
+        let playerController = playerNode.parent.getComponent('PlayerController');
+        if (playerController) {
+            playerController.takeDamage(this.damage);
+        }
+    },
+
     onCollisionEnter(other) {
         if (other.node.group === EntityGroup.BULLET) {
-            this.handleHitByBullet();
+            if (!this._hitByBullet || this._hitByBullet !== other.node.id) {
+                this._hitByBullet = other.node.id;
+                this.handleHitByBullet();
+            }
         }
 
         if (other.node.group === EntityGroup.PLAYER) {
@@ -218,9 +228,13 @@ cc.Class({
                 }
 
                 this.attackPlayer();
-                other.node.getComponent('PlayerController').takeDamage(this.damage);
+                this.damagePlayer(other.node);
 
-                this.attackCallback = this.attackPlayer;
+                this.attackCallback = () => {
+                    if (!this.node || !other.node) return;
+                    this.attackPlayer();
+                    this.damagePlayer(other.node);
+                };
                 this.schedule(this.attackCallback, 1.3);
             }
         }

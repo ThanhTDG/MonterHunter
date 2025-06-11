@@ -13,7 +13,7 @@ cc.Class({
 
     startWaves(onFinishedCallback) {
         this.onAllWavesFinished = onFinishedCallback;
-        this.scheduleOnce(() => this.spawnNextWave(), 1);
+        this.scheduleOnce(() => this.spawnNextWave(), 1.5);
     },
 
     scheduleNextWave(delay = 0) {
@@ -41,9 +41,8 @@ cc.Class({
         monsters.forEach((mons, index) => {
             this.scheduleOnce(() => {
                 this.monsterController.spawnMonster(mons);
-            }, index * 1);
+            }, index * 1.5);
         });
-        cc.log('curOLD', this.currentWave);
         this.currentWave++;
         let newWave = this.currentWave;
 
