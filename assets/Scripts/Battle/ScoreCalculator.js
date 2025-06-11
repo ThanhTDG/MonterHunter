@@ -1,18 +1,12 @@
 cc.Class({
 	extends: cc.Component,
 
-	calculate(
-		currentHP,
-		deadCount,
-		remainingCount,
-		isPlayerDead,
-		baseMultiplier = 10
-	) {
-		if (isPlayerDead) {
-			return deadCount * baseMultiplier;
+	calculate(scoreData, baseMultiplier = 10) {
+		if (scoreData.isPlayerDead || scoreData.remainingCount > 0) {
+			return scoreData.deadCount * baseMultiplier;
 		}
-		let bonusMultiplier = this.getBonusMultiple(currentHP);
-		const score = deadCount * bonusMultiplier * baseMultiplier;
+		let bonusMultiplier = this.getBonusMultiple(scoreData.healthPoint);
+		const score = scoreData.deadCount * bonusMultiplier * baseMultiplier;
 		return score;
 	},
 

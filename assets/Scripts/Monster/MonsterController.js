@@ -14,11 +14,19 @@ cc.Class({
         this.monsters = {};
         this.deadCount = 0;
 
-        this._onMonsterDead = this.onMonsterDead.bind(this);
-        Emitter.instance.registerEvent(MonsterEventKey.MONSTER_DEAD, this._onMonsterDead, this);
+        this.registerEvents();
+    },
 
-        this._onDestroyMonster = this.onDestroyMonster.bind(this);
-        Emitter.instance.registerEvent(MonsterEventKey.MONSTER_END, this._onDestroyMonster, this);
+    registerEvents() {
+        this.eventMap = {
+            [MonsterEventKey.MONSTER_DEAD]: this.onMonsterDead.bind(this),
+            [MonsterEventKey.MONSTER_END]: this.onDestroyMonster.bind(this),
+        };
+        Emitter.instance.registerEventMap(this.eventMap);
+    },
+
+    removeEvents() {
+        Emitter.instance.removeEventMap(this.eventMap);
     },
 
     spawnMonster(monsterData) {
@@ -29,11 +37,13 @@ cc.Class({
             monsterData.id = this.generateId();
         }
         const monster = this.monsterFactory.create(monsterData, this.monsterLayer, pos);
+
         this.monsters[monsterData.id] = monster;
     },
 
     generateId() {
-        return 'mon_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+        const random = Math.floor(Math.random() * 1000);
+        return `mon_${Date.now()}_${random}`;
     },
 
     getRandomLaneY() {
@@ -68,11 +78,33 @@ cc.Class({
         return allCleared;
     },
 
+    getRemainingMonsterCount() {
+        return this.getAliveMonsters().length;
+    },
+
+    getAliveMonsters() {
+        return Object.values(this.monsters).filter(m => cc.isValid(m) && m.parent);
+    },
+
     remove(id) {
-        if (this.monsters[id]) {
-            this.monsters[id].destroy();
-            delete this.monsters[id];
+        const monster = this.monsters[id];
+
+        if (monster.currentHealth > 0) {
+            console.warn(`Cảnh báo: Quái ID ${id} bị xóa khi còn sống!`);
+            return;
         }
+
+        if (monster.__tween) {
+            monster.__tween.stop();
+            monster.__tween = null;
+        }
+
+        if (typeof monster.unscheduleAllCallbacks === "function") {
+            monster.unscheduleAllCallbacks();
+        }
+
+        monster.destroy();
+        delete this.monsters[id];
     },
 
     clearAll() {
@@ -87,7 +119,6 @@ cc.Class({
         this.monsters = {};
         this.deadCount = 0;
 
-        Emitter.instance.removeEvent(MonsterEventKey.MONSTER_DEAD, this._onMonsterDead, this);
-        Emitter.instance.removeEvent(MonsterEventKey.MONSTER_END, this._onDestroyMonster, this);
+        this.removeEvents();
     }
 });

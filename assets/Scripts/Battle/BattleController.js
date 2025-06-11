@@ -23,44 +23,63 @@ cc.Class({
 		waveSlider: cc.Slider,
 	},
 	onLoad() {
-		this.mapLabel.active = false;
-		this.countDownLabel.active = false;
-
-		this.waveSlider.progress = 0;
-		this.waveSlider.interactable = false;
-		this.waveSlider.enabled = false;
-		const focus = this.waveSlider.node.getChildByName("Focus");
-		if (focus) {
-			focus.width = 0;
-		}
-
+		this.resetUI();
+		this.initGameState();
 		this.registerEvents();
 	},
-
 	start() {
-		this.init();
+		this.initBattle();
 	},
 	onDestroy() {
 		this.removeEvents();
 		this.stopBackgroundMusic();
 	},
 
-	registerEvents() {
-		this.eventMap = {
-			[PlayerEventKey.PLAYER_DIED]: this.onPlayerDead.bind(this),
-			[MonsterEventKey.NEW_WAVE]: this.updateSlider.bind(this),
-			[PopupEventKeys.HIDE_SETTING_POPUP]: this.resumeGame.bind(this),
-			[BattleEventKey.RETRY_BATTLE]: this.resetGame.bind(this),
-			[BattleEventKey.NEXT_BATTLE]: this.nextMap.bind(this),
-		};
-		Emitter.instance.registerEventMap(this.eventMap);
+	pauseGame() {
+		if (this.isGameEnded) {
+			return;
+		}
+		cc.director.pause();
+		// test pause BMG
+		this.stopBackgroundMusic();
+		this.countDownLabel.getComponent(cc.Label).string = "PAUSE";
+		this.countDownLabel.active = true;
+	},
+	resumeGame() {
+		if (this.isGameEnded) {
+			return;
+		}
+		cc.director.resume();
+		// test pause BMG
+		this.startBackgroundMusic();
+		if (typeof this.countdownTimer === "number" && this.countdownTimer >= 0) {
+			this.countDownLabel.getComponent(cc.Label).string =
+				this.countdownTimer.toString();
+			this.countDownLabel.active = true;
+		} else {
+			this.countDownLabel.getComponent(cc.Label).string = "";
+			this.countDownLabel.active = false;
+		}
+	},
+	resetGame() {
+		cc.director.resume();
+
+		this.isGameEnded = false;
+		this.isPlayerDead = false;
+		this.winDeclared = false;
+
+		this.clearCountdown();
+		this.clearGame();
+		this.resetUI();
+		this.stopBackgroundMusic();
+
+		this.scheduleOnce(() => {
+			this.startBackgroundMusic();
+			this.initBattle();
+		}, 0.1);
 	},
 
-	removeEvents() {
-		Emitter.instance.removeEventMap(this.eventMap);
-	},
-
-	init() {
+	initGameState() {
 		this.isGameEnded = false;
 		this.isPlayerDead = false;
 		this.deadCount = 0;
@@ -70,27 +89,71 @@ cc.Class({
 		collisionManager.enabled = true;
 		collisionManager.enabledDebugDraw = true;
 		this.listLane = this.laneManager.returnListSpawn();
+	},
+	initBattle() {
 		this.startBackgroundMusic();
 		this.initPlayerData();
 		this.startBattle();
 	},
-	startBackgroundMusic() {
-		SoundController.playSound(AudioKey.BATTLE_BGM, true);
-	},
-	stopBackgroundMusic() {
-		SoundController.stopSound(AudioKey.BATTLE_BGM);
-	},
-
 	initPlayerData() {
 		const playerData = DataController.instance.getPlayerStats();
 		this.playerController.init(playerData, this.listLane);
 	},
-
 	sendInitEvent(playerData) {
 		Emitter.instance.emit(PlayerEventKey.PLAYER_INIT, {
 			playerData,
 			listLane: this.listLane,
 		});
+	},
+	startBattle() {
+		let selectedMap = DataController.instance.getSelectedMap();
+		this.displayMapInfo(selectedMap);
+
+		const lanePos = this.laneManager.returnListSpawn();
+		this.waveData = selectedMap.waves;
+		this.endTime = selectedMap.endTime || 15;
+
+		let total = 0;
+		for (const wave of this.waveData) {
+			for (const monster of wave) {
+				total += monster.count;
+			}
+		}
+		this.totalMonsters = total;
+		this.deadCount = 0;
+		this.winDeclared = false;
+		this.isPlayerDead = false;
+
+		this.monsterController.init(this.monsterLayer, lanePos);
+		this.waveController.init(this.waveData, this.monsterController);
+		this.waveController.startWaves(() => this.onWaveFinished());
+	},
+
+	registerEvents() {
+		this.eventMap = {
+			[PlayerEventKey.PLAYER_DEAD]: this.onPlayerDead.bind(this),
+			[MonsterEventKey.NEW_WAVE]: this.updateSlider.bind(this),
+			[PopupEventKeys.HIDE_SETTING_POPUP]: this.resumeGame.bind(this),
+			[BattleEventKey.RETRY_BATTLE]: this.resetGame.bind(this),
+			[BattleEventKey.NEXT_BATTLE]: this.nextMap.bind(this),
+		};
+		Emitter.instance.registerEventMap(this.eventMap);
+	},
+	removeEvents() {
+		Emitter.instance.removeEventMap(this.eventMap);
+	},
+
+	startBackgroundMusic() {
+		if (!this.isBGMPlaying) {
+			SoundController.playSound(AudioKey.BATTLE_BGM, true);
+			this.isBGMPlaying = true;
+		}
+	},
+	stopBackgroundMusic() {
+		if (this.isBGMPlaying) {
+			SoundController.stopSound(AudioKey.BATTLE_BGM);
+			this.isBGMPlaying = false;
+		}
 	},
 
 	resetUI() {
@@ -119,39 +182,29 @@ cc.Class({
 			10
 		);
 	},
-
 	updateVisual() {
 		const focus = this.waveSlider.node.getChildByName("Focus");
 		if (focus)
 			focus.width = this.waveSlider.node.width * this.waveSlider.progress;
 	},
 
-	startBattle() {
-		let selectedMap = DataController.instance.getSelectedMap();
-		this.displayMapInfo(selectedMap);
+	displayMapInfo(selectedMap) {
+		this.mapLabel.getComponent(cc.Label).string = selectedMap.name;
+		this.mapLabel.active = true;
+		this.mapLabel.opacity = 0;
 
-		const lanePos = this.laneManager.returnListSpawn();
-		this.waveData = selectedMap.waves;
-		this.endTime = selectedMap.endTime || 15;
-
-		let total = 0;
-		for (const wave of this.waveData) {
-			for (const monster of wave) {
-				total += monster.count;
-			}
-		}
-		this.totalMonsters = total;
-		this.deadCount = 0;
-		this.winDeclared = false;
-		this.isPlayerDead = false;
-
-		this.monsterController.init(this.monsterLayer, lanePos);
-		this.waveController.init(this.waveData, this.monsterController);
-		this.waveController.startWaves(() => this.onWaveFinished());
+		cc.tween(this.mapLabel)
+			.to(2.5, { opacity: 255 })
+			.delay(1.5)
+			.to(1.5, { opacity: 0 })
+			.call(() => {
+				this.mapLabel.active = false;
+				this.mapLabel.opacity = 255;
+			})
+			.start();
 	},
 
 	onWaveFinished() {
-		// event có thể dùng cho trường hợp này mà nhỉ ?
 		this.scheduleOnce(() => {
 			if (this.monsterController.areAllMonstersCleared()) {
 				this.declareWin();
@@ -171,7 +224,7 @@ cc.Class({
 			if (this.isGameEnded) return;
 
 			if (this.countdownTimer <= 0) {
-				if (!this.monsterController.areAllMonstersCleared()) {
+				if (!this.monsterController.areAllMonstersCleared() || this.isPlayerDead) {
 					this.declareLose();
 					return;
 				}
@@ -191,6 +244,34 @@ cc.Class({
 		this.schedule(this.countdownCallback, 1);
 	},
 
+	onPlayerDead() {
+		this.isPlayerDead = true;
+		this.declareLose();
+	},
+	calculateScoreAndShowPopup(isPlayerDead) {
+		const healthPoint = this.playerController.getCurrentHealth();
+		const deadCount = this.monsterController.getDeadCount();
+		const remainingCount = this.monsterController.getRemainingCount ? this.monsterController.getRemainingCount() : 0;
+		const playerAlive = !isPlayerDead;
+
+		const scoreData = {
+			healthPoint,
+			deadCount,
+			remainingCount,
+			isPlayerDead,
+		};
+
+		const score = this.scoreCal.calculate(scoreData);
+
+		cc.log("[BattleController] Final Score:", score);
+
+		Emitter.instance.emit(PopupEventKeys.SHOW_POPUP, {
+			score,
+			playerAlive,
+			deadCount,
+		});
+	},
+
 	declareWin() {
 		if (this.isGameEnded) return;
 		this.isGameEnded = true;
@@ -204,7 +285,6 @@ cc.Class({
 			this.calculateScoreAndShowPopup(false);
 		}, 3);
 	},
-
 	declareLose() {
 		if (this.isGameEnded) return;
 		this.isGameEnded = true;
@@ -220,109 +300,9 @@ cc.Class({
 		}, 3);
 	},
 
-	calculateScoreAndShowPopup(isPlayerDead) {
-		const healthPoint = this.playerController.getCurrentHealth();
-		const deadCount = this.monsterController.getDeadCount();
-		// Trong controller này không có hàm cũng không có thuộc tính getRemainingCount,
-		// Tại sao không quản lý bằng danh sách ? rồi có thể trừ đi mà nhỉ ?
-		const remainingCount = this.monsterController.getRemainingCount
-			? this.monsterController.getRemainingCount()
-			: 0;
-
-		const playerAlive = !isPlayerDead;
-		const score = this.scoreCal.calculate(
-			healthPoint,
-			deadCount,
-			remainingCount,
-			playerAlive
-		);
-
-		cc.log("[BattleController] Final Score:", score);
-
-		// Hiện popup endgame ở đây, bạn có thể gọi hàm showPopupEndgame(score, playerAlive)
-		// Ví dụ:
-		// this.showEndgamePopup(score, playerAlive);
-	},
-
-	onPlayerDead() {
-		this.isPlayerDead = false;
-	},
-
-	pauseGame() {
-		if (this.isGameEnded) {
-			return;
-		}
-		cc.director.pause();
-		this.countDownLabel.getComponent(cc.Label).string = "PAUSE";
-		this.countDownLabel.active = true;
-	},
-
-	resumeGame() {
-		if (this.isGameEnded) {
-			return;
-		}
-		cc.director.resume();
-		if (typeof this.countdownTimer === "number" && this.countdownTimer >= 0) {
-			this.countDownLabel.getComponent(cc.Label).string =
-				this.countdownTimer.toString();
-			this.countDownLabel.active = true;
-		} else {
-			this.countDownLabel.getComponent(cc.Label).string = "";
-			this.countDownLabel.active = false;
-		}
-	},
-	resetGame() {
-		// tại sao lại phải xóa rồi đăng ký lại event ?
-		// có những hàm chỉ init 1 lần duy nhất sao lại gọi cả init() ?
-		cc.director.resume();
-		this.clearCountdown();
-		this.clearGame();
-		this.removeEvents();
-		this.resetUI();
-		this.registerEvents();
-		this.init();
-	},
-
 	nextMap() {
 		DataController.instance.goToNextMap();
 		this.resetGame();
-	},
-
-	displayMapInfo(selectedMap) {
-		this.mapLabel.getComponent(cc.Label).string = selectedMap.name;
-		this.mapLabel.active = true;
-		this.mapLabel.opacity = 0;
-
-		cc.tween(this.mapLabel)
-			.to(2.5, { opacity: 255 })
-			.delay(1.5)
-			.to(1.5, { opacity: 0 })
-			.call(() => {
-				this.mapLabel.active = false;
-				this.mapLabel.opacity = 255;
-			})
-			.start();
-	},
-
-	updateSlider(data) {
-		let progressValue = data.newWave / data.totalWave;
-
-		cc.tween(this.waveSlider)
-			.to(0.5, { progress: progressValue })
-			.call(() => this.updateVisual())
-			.start();
-		this.schedule(
-			() => {
-				this.updateVisual();
-			},
-			0.05,
-			10
-		);
-	},
-
-	updateVisual() {
-		const focus = this.waveSlider.node.getChildByName("Focus");
-		focus.width = this.waveSlider.node.width * this.waveSlider.progress;
 	},
 
 	clearCountdown() {
@@ -336,9 +316,14 @@ cc.Class({
 	},
 
 	clearGame() {
-		this.monsterController.clearAll();
-		this.waveController.clear();
-		this.playerController.clear();
 		this.unscheduleAllCallbacks();
+
+		if (this.monsterController && this.monsterController.clearAll)
+			this.monsterController.clearAll();
+		if (this.waveController && this.waveController.clear)
+			this.waveController.clear();
+		if (this.playerController && this.playerController.clear)
+			this.playerController.clear();
+		SoundController.stopAllSound && SoundController.stopAllSound();
 	},
 });
