@@ -3,6 +3,9 @@ const PlayerEventKey = require("../Event/EventKeys/PlayerEventKey");
 const BattleEventKey = require("../Event/EventKeys/BattleEventKey");
 const MonsterEventKey = require('MonsterEventKey');
 const mapData = require('mapData');
+const { DataController } = require("../System/DataController");
+const { SHOW_POPUP } = require("../Event/EventKeys/PopupEventKeys");
+const { PopupType } = require("../Enum/popupType");
 cc.Class({
     extends: cc.Component,
 
@@ -18,12 +21,15 @@ cc.Class({
         waveSlider: cc.Slider,
     },
     onLoad() {
+        
+        let sceneName = cc.director.getScene();
+        console.log("Current Scene Name:", sceneName);
         this.mapLabel.active = false;
         this.countDownLabel.active = false;
 
         this.waveSlider.progress = 0;
-        this.waveSlider.interactable = false; 
-        this.waveSlider.enabled = false; 
+        this.waveSlider.interactable = false;
+        this.waveSlider.enabled = false;
         const focus = this.waveSlider.node.getChildByName('Focus');
         if (focus) {
             focus.width = 0;
@@ -38,6 +44,7 @@ cc.Class({
 
     start() {
         this.init();
+
     },
 
     init() {
@@ -53,17 +60,8 @@ cc.Class({
     },
 
     initPlayerData() {
-        const playerData = {
-            hp: 100,
-            damage: 20,
-            shootSpeed: 0.5,
-            moveSpeed: 500,
-        };
-        this.sendInitEvent(playerData);
-    },
-
-    sendInitEvent(playerData) {
-        Emitter.instance.emit(PlayerEventKey.PLAYER_INIT, { playerData, listLane: this.listLane });
+        const playerData = DataController.instance.getPLayerStats();
+        this.playerController.init(playerData, this.listLane);
     },
 
 
@@ -97,6 +95,16 @@ cc.Class({
         this.monsterController.init(this.monsterLayer, lanePos);
         this.waveController.init(this.waveData, this.monsterController);
         this.waveController.startWaves(() => this.onWaveFinished());
+
+    },
+
+    onPauseGame() {
+        cc.director.pause();
+        Emitter.instance.emit(SHOW_POPUP, PopupType.SETTING);
+    },
+
+    onResumeGame() {
+        cc.director.resume();
 
     },
 
@@ -169,8 +177,8 @@ cc.Class({
     },
 
     calculateScore() {
-        const deadCount = this.monsterController.getDeadCount(); 
-        const currentHP = this.playerController.getCurrentHealth(); 
+        const deadCount = this.monsterController.getDeadCount();
+        const currentHP = this.playerController.getCurrentHealth();
 
         cc.log(deadCount, currentHP);
 
@@ -194,7 +202,7 @@ cc.Class({
             .start();
     },
 
-    updateSlider(data) { 
+    updateSlider(data) {
         let progressValue = data.newWave / data.totalWave;
 
         cc.tween(this.waveSlider)
@@ -216,6 +224,7 @@ cc.Class({
     clearGame() {
         this.monsterController.clearAll();
         this.waveController.clear();
+        collisionManager.enabled = false;
         Emitter.instance.removeEvent(PlayerEventKey.PLAYER_DIED, this._onPlayerDead);
         Emitter.instance.removeEvent(PlayerEventKey.PLAYER_DIED, this._updateSlider);
     },

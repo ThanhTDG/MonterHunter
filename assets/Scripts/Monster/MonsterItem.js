@@ -205,7 +205,7 @@ cc.Class({
     },
 
     damagePlayer(playerNode) {
-        let playerController = playerNode.parent.getComponent('PlayerController');
+        let playerController = playerNode.getComponent('PlayerController');
         if (playerController) {
             playerController.takeDamage(this.damage);
         }

@@ -22,7 +22,7 @@ cc.Class({
     },
     checkOutOfscene() {
         const worldPosition = this.node.parent.convertToWorldSpaceAR(this.node.position);
-        if (worldPosition.x + this.node.width / 2 > cc.winSize.width) {
+        if (worldPosition.x + this.node.width / 2 > cc.winSize.width - 100) {
             this.onDestroyBullet();
         }
     },

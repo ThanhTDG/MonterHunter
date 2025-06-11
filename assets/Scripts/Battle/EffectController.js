@@ -7,7 +7,6 @@ const EffectController = cc.Class({
 
     properties: {
         damageTextPrefab: cc.Prefab,
-        effectLayer: cc.Node,
     },
 
     onLoad() {
@@ -22,13 +21,13 @@ const EffectController = cc.Class({
     },
 
     playEffectText(worldPos, damage, DestroyTime = 1) {
-        if (!this.damageTextPrefab || !this.effectLayer) return;
+        if (!this.damageTextPrefab) return;
 
         const effect = cc.instantiate(this.damageTextPrefab);
-        const localPos = this.effectLayer.convertToNodeSpaceAR(worldPos);
+        this.node.addChild(effect);
+        const localPos = this.node.convertToNodeSpaceAR(worldPos);
         effect.setPosition(localPos);
 
-        this.effectLayer.addChild(effect);
 
         const label = effect.getComponent(cc.Label);
         if (label) {
@@ -47,8 +46,8 @@ const EffectController = cc.Class({
             .start();
     },
 
-    onDestroy(){
-        Emitter.instance.unregisterEventMap(this.eventMap);
+    onDestroy() {
+        Emitter.instance.removeEventMap(this.eventMap);
     },
 
 });

@@ -20,7 +20,6 @@ cc.Class({
 
     registerEvents() {
         this.eventMap = {
-            [PlayerEventKey.PLAYER_INIT]: this.onInit.bind(this),
             [PlayerEventKey.PLAYER_MOVE]: this.onPlayerMove.bind(this),
             [PlayerEventKey.INCREASE_SHOOT_SPEED]: this.onIncreaseShootSpeed.bind(this),
             [PlayerEventKey.ACTIVATE_ULTIMATE]: this.onUltimateActivated.bind(this),
@@ -28,13 +27,16 @@ cc.Class({
         Emitter.instance.registerEventMap(this.eventMap);
     },
 
-    onInit({ playerData, listLane }) {
+    init(playerData, listLane) {
+        cc.log(playerData);
         this.hp = playerData.hp;
         this.maxHp = playerData.hp;
         this.damage = playerData.damage;
         this.shootSpeed = playerData.shootSpeed;
         this.originalShootSpeed = playerData.shootSpeed;
         this.moveSpeed = playerData.moveSpeed;
+        this.collider = this.getComponent(cc.Collider);
+
 
         this.setUpLane(listLane);
         this.updateHpBar();
@@ -47,7 +49,11 @@ cc.Class({
                 { name: PlayerState.Transition.INITIALIZE, from: PlayerState.State.NULL, to: PlayerState.State.READY },
                 { name: PlayerState.Transition.MOVE, from: [PlayerState.State.SHOOTING], to: PlayerState.State.MOVING },
                 { name: PlayerState.Transition.STOP, from: [PlayerState.State.MOVING, PlayerState.State.SHOOTING], to: PlayerState.State.STOP },
-                { name: PlayerState.Transition.SHOOT, from: ['*'], to: PlayerState.State.SHOOTING },
+                {
+                    name: PlayerState.Transition.SHOOT, from:
+                        [PlayerState.State.READY, PlayerState.State.MOVING, PlayerState.State.STOP],
+                    to: PlayerState.State.SHOOTING
+                },
                 { name: PlayerState.Transition.DIE, from: '*', to: PlayerState.State.DEAD },
             ],
             methods: {
@@ -91,24 +97,30 @@ cc.Class({
             return;
         }
 
-        this.unschedule(this.shootingSchedule);
-        direction === "up" ? this.moveUp() : this.moveDown();
+        if (direction === "up" && this.currentLaneIndex > 0) {
+            this.unschedule(this.shootingSchedule);
+            this.moveUp();
+        } else if (direction === "down" && this.currentLaneIndex < this.listPlayerPos.length - 1) {
+            this.unschedule(this.shootingSchedule);
+            this.moveDown();
+        }
     },
 
+
     moveUp() {
-        if (this.currentLaneIndex > 0) {
-            this.currentLaneIndex--;
-            this.targetPos = this.listPlayerPos[this.currentLaneIndex];
-            this.fsm.move();
-        }
+        if (this.currentLaneIndex <= 0) return;
+
+        this.currentLaneIndex--;
+        this.targetPos = this.listPlayerPos[this.currentLaneIndex];
+        this.fsm.move();
     },
 
     moveDown() {
-        if (this.currentLaneIndex < this.listPlayerPos.length - 1) {
-            this.currentLaneIndex++;
-            this.targetPos = this.listPlayerPos[this.currentLaneIndex];
-            this.fsm.move();
-        }
+        if (this.currentLaneIndex >= this.listPlayerPos.length - 1) return;
+
+        this.currentLaneIndex++;
+        this.targetPos = this.listPlayerPos[this.currentLaneIndex];
+        this.fsm.move();
     },
 
     moveToTarget() {
@@ -117,7 +129,7 @@ cc.Class({
         let dist = this.node.position.sub(this.targetPos).mag();
         let duration = dist / this.moveSpeed;
 
-        cc.tween(this.node)
+        this.movingTween = cc.tween(this.node)
             .to(duration, { position: this.targetPos }, { easing: "smooth" })
             .call(() => {
                 if (this.fsm.can('stop')) {
@@ -166,10 +178,6 @@ cc.Class({
     },
 
     onIncreaseShootSpeed({ multiplier, duration }) {
-        if (!this.fsm.can('shoot')) {
-            cc.log("Player cannot shoot in the current state.");
-            return;
-        }
         this.shootSpeed /= multiplier;
 
         this.unschedule(this.shootingSchedule);
@@ -198,11 +206,17 @@ cc.Class({
     },
 
     takeDamage(amount) {
+        if (this.fsm.state === PlayerState.State.DEAD) {
+            cc.log("Cannot take damage. Player is already dead.");
+            return;
+        }
         this.hp = Math.max(0, this.hp - amount);
         this.updateHpBar();
 
-        if (this.hp <= 0) {
+        if (this.hp <= 0 && this.fsm.state !== PlayerState.State.DEAD) {
             this.fsm.die();
+            this.collider.enabled = false;
+
         }
         const worldPos = this.node.convertToWorldSpaceAR(cc.Vec2.ZERO);
         Emitter.instance.emit(PlayerEventKey.PLAYER_HURT, worldPos, amount, 1);
@@ -216,11 +230,21 @@ cc.Class({
     handleDeath() {
         this.stopActions();
 
+        if (this.movingTween) {
+            this.movingTween.stop();
+            this.movingTween = null;
+        }
+
         if (this.spine) {
             this.spine.setAnimation(0, "death", false);
-            this.spine.setCompleteListener(() => {
-                this.clear();
-                Emitter.instance.emit(PlayerEventKey.PLAYER_DEAD);
+
+            this.spine.setCompleteListener((trackEntry) => {
+                if (trackEntry.animation.name === "death") {
+                    this.clear();
+                    this.unscheduleAllCallbacks();
+                    Emitter.instance.emit(PlayerEventKey.PLAYER_DEAD);
+                    this.spine.setCompleteListener(null);
+                }
             });
         }
     },
@@ -235,6 +259,7 @@ cc.Class({
         this.currentLaneIndex = 0;
         this.targetPos = null;
         this.stopActions();
+        this.collider.enabled = false;
 
         if (this.spine) {
             this.spine.clearTrack(0);
@@ -242,7 +267,8 @@ cc.Class({
     },
 
     onDestroy() {
-        this.fsm = null;
+        this.clear();
+        this.fsm = null;;
         Emitter.instance.removeEventMap(this.eventMap);
         this.unschedule(this.spawnBullet);
     },
