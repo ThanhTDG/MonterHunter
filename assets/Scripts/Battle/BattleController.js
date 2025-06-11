@@ -6,6 +6,8 @@ const { DataController } = require("../System/DataController");
 const { SoundController } = require("../Sound/SoundController");
 const { AudioKey } = require("../Enum/AudioKey");
 
+const PopupEventKeys = require("../Event/EventKeys/PopupEventKeys");
+const { PopupType } = require("../Enum/popupType");
 cc.Class({
 	extends: cc.Component,
 
@@ -39,7 +41,23 @@ cc.Class({
 		this.init();
 	},
 	onDestroy() {
-		this.clearGame();
+		this.removeEvents();
+		this.stopBackgroundMusic();
+	},
+
+	registerEvents() {
+		this.eventMap = {
+			[PlayerEventKey.PLAYER_DIED]: this.onPlayerDead.bind(this),
+			[MonsterEventKey.NEW_WAVE]: this.updateSlider.bind(this),
+			[PopupEventKeys.HIDE_SETTING_POPUP]: this.resumeGame.bind(this),
+			[BattleEventKey.RETRY_BATTLE]: this.resetGame.bind(this),
+			[BattleEventKey.NEXT_BATTLE]: this.nextMap.bind(this),
+		};
+		Emitter.instance.registerEventMap(this.eventMap);
+	},
+
+	removeEvents() {
+		Emitter.instance.removeEventMap(this.eventMap);
 	},
 
 	init() {
@@ -51,8 +69,8 @@ cc.Class({
 		const collisionManager = cc.director.getCollisionManager();
 		collisionManager.enabled = true;
 		collisionManager.enabledDebugDraw = true;
-		this.startBackgroundMusic();
 		this.listLane = this.laneManager.returnListSpawn();
+		this.startBackgroundMusic();
 		this.initPlayerData();
 		this.startBattle();
 	},
@@ -63,28 +81,9 @@ cc.Class({
 		SoundController.stopSound(AudioKey.BATTLE_BGM);
 	},
 
-	registerEvents() {
-		this.eventMap = {
-			[PlayerEventKey.PLAYER_DIED]: this.onPlayerDead.bind(this),
-			[MonsterEventKey.NEW_WAVE]: this.updateSlider.bind(this),
-		};
-
-		Emitter.instance.registerEventMap(this.eventMap);
-	},
-
-	clearEvents() {
-		Emitter.instance.removeEventMap(this.eventMap);
-		this.eventMap = {};
-	},
-
 	initPlayerData() {
-		const playerData = {
-			hp: 100,
-			damage: 20,
-			shootSpeed: 0.5,
-			moveSpeed: 500,
-		};
-		this.sendInitEvent(playerData);
+		const playerData = DataController.instance.getPLayerStats();
+		this.playerController.init(playerData, this.listLane);
 	},
 
 	sendInitEvent(playerData) {
@@ -142,6 +141,10 @@ cc.Class({
 			}
 		}
 		this.totalMonsters = total;
+		this.deadCount = 0;
+		this.winDeclared = false;
+		this.isPlayerDead = false;
+
 		this.monsterController.init(this.monsterLayer, lanePos);
 		this.waveController.init(this.waveData, this.monsterController);
 		this.waveController.startWaves(() => this.onWaveFinished());
@@ -239,19 +242,40 @@ cc.Class({
 	},
 
 	onPlayerDead() {
-		this.isPlayerDead = true;
-		this.declareLose();
+		this.isPlayerDead = false;
+	},
+
+	calculateScoreAndShowPopup(isPlayerDead) {
+		const healtPlayer = this.playerController.getCurrentHealth();
+		const deadCount = this.monsterController.getDeadCount();
+		const remainingCount = this.monsterController.getRemainingCount
+			? this.monsterController.getRemainingCount()
+			: 0;
+
+		const playerAlive = !isPlayerDead;
+		const score = this.scoreCal.calculate(
+			healtPlayer,
+			deadCount,
+			remainingCount,
+			playerAlive
+		);
+
+		cc.log("[BattleController] Final Score:", score);
 	},
 
 	pauseGame() {
-		if (this.isGameEnded) return;
+		if (this.isGameEnded) {
+			return;
+		}
 		cc.director.pause();
 		this.countDownLabel.getComponent(cc.Label).string = "PAUSE";
 		this.countDownLabel.active = true;
 	},
 
 	resumeGame() {
-		if (this.isGameEnded) return;
+		if (this.isGameEnded) {
+			return;
+		}
 		cc.director.resume();
 		if (typeof this.countdownTimer === "number" && this.countdownTimer >= 0) {
 			this.countDownLabel.getComponent(cc.Label).string =
@@ -262,18 +286,12 @@ cc.Class({
 			this.countDownLabel.active = false;
 		}
 	},
-
 	resetGame() {
 		cc.director.resume();
-
 		this.clearCountdown();
-
 		this.clearGame();
-
-		this.clearEvents();
-
+		this.removeEvents();
 		this.resetUI();
-
 		this.registerEvents();
 		this.init();
 	},
@@ -304,6 +322,27 @@ cc.Class({
 			.start();
 	},
 
+	updateSlider(data) {
+		let progressValue = data.newWave / data.totalWave;
+
+		cc.tween(this.waveSlider)
+			.to(0.5, { progress: progressValue })
+			.call(() => this.updateVisual())
+			.start();
+		this.schedule(
+			() => {
+				this.updateVisual();
+			},
+			0.05,
+			10
+		);
+	},
+
+	updateVisual() {
+		const focus = this.waveSlider.node.getChildByName("Focus");
+		focus.width = this.waveSlider.node.width * this.waveSlider.progress;
+	},
+
 	clearCountdown() {
 		if (this.countdownCallback) {
 			this.unschedule(this.countdownCallback);
@@ -319,19 +358,5 @@ cc.Class({
 		this.waveController.clear();
 		this.playerController.clear();
 		this.unscheduleAllCallbacks();
-		this.stopBackgroundMusic();
-		Emitter.instance.removeEvent(
-			PlayerEventKey.PLAYER_DIED,
-			this._onPlayerDead
-		);
-		Emitter.instance.removeEvent(
-			PlayerEventKey.PLAYER_DIED,
-			this._updateSlider
-		);
-	},
-
-	clearEvent() {
-		Emitter.instance.removeEventMap(this.eventMap);
-		this.eventMap = {};
 	},
 });

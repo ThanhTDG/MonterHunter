@@ -165,7 +165,7 @@
       "__type__": "cc.Vec3",
       "x": 0,
       "y": 0,
-      "z": 366.32874580081756
+      "z": 357.6684917629732
     },
     "_scale": {
       "__type__": "cc.Vec3",
@@ -794,7 +794,7 @@
     "_is3DNode": false,
     "groupIndex": 0,
     "showInEditor": false,
-    "_id": "c7N5ZmTIdN4qrRntIe2Qti"
+    "_id": "a0R+33l59Hw4ipRiDDj1Kz"
   },
   {
     "__type__": "cc.Label",
@@ -826,7 +826,7 @@
     "_N$fontFamily": "Arial",
     "_N$overflow": 0,
     "_N$cacheMode": 0,
-    "_id": "c97gLGNjFBSot4Da5LHnwD"
+    "_id": "46ya0YDlFJjJOnyQohqA9J"
   },
   {
     "__type__": "cc.RichText",

@@ -26,7 +26,7 @@ export class DataController {
         this.playerRecord.setMapRecord(mapId, score);
     }
     getPLayerStats() {
-        this.playerStats.clone();
+        return this.playerStats.clone();
     }
 
     setSkillPoint(type, value) {
