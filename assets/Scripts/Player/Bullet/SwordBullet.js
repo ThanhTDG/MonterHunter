@@ -45,14 +45,18 @@ cc.Class({
     },
 
     onCollisionEnter(other, self) {
-        if (other.node.group === EntityGroup.MONSTER && !this.damageTargets.includes(other.node)) {
-            this.damageTargets.push(other.node);
-            this.applyDamageImmediately(other.node);
-            if (this.staying) {
-                this.schedule(this.applyDamage, this.damageInterval);
-            }
+        if (other.node.group !== EntityGroup.MONSTER || this.damageTargets.includes(other.node)) {
+            return;
+        }
+
+        this.damageTargets.push(other.node);
+        this.applyDamageImmediately(other.node);
+
+        if (this.staying) {
+            this.schedule(this.applyDamage, this.damageInterval);
         }
     },
+
 
     onCollisionExit(other, self) {
         const index = this.damageTargets.indexOf(other.node);

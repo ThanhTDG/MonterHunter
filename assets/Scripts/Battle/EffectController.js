@@ -5,19 +5,18 @@ const MonsterEventKey = require('../Event/EventKeys/MonsterEventKey');
 const EffectController = cc.Class({
     extends: cc.Component,
 
-    statics: {
-        instance: null,
-    },
-
     properties: {
         damageTextPrefab: cc.Prefab,
         effectLayer: cc.Node,
     },
 
     onLoad() {
+        this.registerEvents();
+    },
+
+    registerEvents() {
         this.eventMap = {
-            [PlayerEventKey.PLAYER_HURT] : this.playEffectText.bind(this),
-            
+            [PlayerEventKey.PLAYER_HURT]: this.playEffectText.bind(this),
         };
         Emitter.instance.registerEventMap(this.eventMap);
     },
