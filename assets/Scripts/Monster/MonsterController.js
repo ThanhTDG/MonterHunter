@@ -77,9 +77,17 @@ cc.Class({
 
     clearAll() {
         for (let id in this.monsters) {
-            this.monsters[id].destroy();
+            const monster = this.monsters[id];
+            if (monster) {
+                monster.unscheduleAllCallbacks && monster.unscheduleAllCallbacks();
+                monster.stopAllActions && monster.stopAllActions();
+                monster.destroy();
+            }
         }
         this.monsters = {};
-        Emitter.instance.removeEvent(MonsterEventKey.MONSTER_DEAD, this.onMonsterDead, this);
+        this.deadCount = 0;
+
+        Emitter.instance.removeEvent(MonsterEventKey.MONSTER_DEAD, this._onMonsterDead, this);
+        Emitter.instance.removeEvent(MonsterEventKey.MONSTER_END, this._onDestroyMonster, this);
     }
 });

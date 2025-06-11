@@ -1,7 +1,7 @@
 cc.Class({
     extends: cc.Component,
 
-    calculate(deadCount, currentHP, isPlayerDead, baseMultiplier = 10) {
+    calculate(currentHP, deadCount, remainingCount, isPlayerDead, baseMultiplier = 10) {
         if (isPlayerDead) {
             return deadCount * baseMultiplier;
         }
