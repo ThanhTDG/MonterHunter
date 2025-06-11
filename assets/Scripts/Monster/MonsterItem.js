@@ -25,12 +25,13 @@ cc.Class({
         this.attackPlayer = this.attackPlayer.bind(this);
     },
 
-    init(level = 1) {
-        this.maxHealth = 70 * level;
+    init(monsterData) {
+        this.level = monsterData.level || 1;
+        this.maxHealth = monsterData.health || (70 * this.level);
         this.currentHealth = this.maxHealth;
+        this.damage = monsterData.damage || 5;
+        this.speed = monsterData.speed || (100 + this.level * 50);
         this.healthBar.progress = 1;
-        this.level = level;
-        this.speed = 100 + (level * 50);
 
         this.initFSM();
 
@@ -185,7 +186,7 @@ cc.Class({
     attackPlayer() {
         if (!this.canAttack || this.fsm.is(MonsterState.State.DEAD)) return;
 
-        Emitter.instance.emit(MonsterEventKey.PLAYER_ATTACKED, { // sự kiện đánh player
+        Emitter.instance.emit(MonsterEventKey.PLAYER_ATTACKED, { 
             monsterId: this.id,
             damage: this.damage,
             type: this.type
@@ -205,7 +206,7 @@ cc.Class({
     },
 
     damagePlayer(playerNode) {
-        let playerController = playerNode.parent.getComponent('PlayerController');
+        let playerController = playerNode.parent.getComponent('PlayerController'); // fix parent
         if (playerController) {
             playerController.takeDamage(this.damage);
         }
