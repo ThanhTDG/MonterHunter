@@ -18,23 +18,17 @@ cc.Class({
 
         const monster = cc.instantiate(prefab);
         monster.parent = parent;
-        monster.setPosition(parent.convertToNodeSpaceAR(pos)); 
+        monster.setPosition(parent.convertToNodeSpaceAR(pos));
 
         const script = monster.getComponent(PrefabMap[monsterData.type]);
-
-        script.init(monsterData.level);
-        script.id = monsterData.id = this.generateId();
+        script.init(monsterData);
+        script.id = monsterData.id;
         script.type = monsterData.type;
 
-        cc.log(monster);
         return monster;
     },
 
     getPrefabByType(type) {
         return this.prefabList.find(p => p.name === type);
     },
-
-    generateId() {
-        return 'mon_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-    }
 });
