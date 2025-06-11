@@ -14,6 +14,11 @@ cc.Class({
     },
 
     onLoad() {
+        this.setUpEvent();
+        this.setupFSM();
+    },
+
+    setUpEvent() {
         this.eventMap = {
             [PlayerEventKey.PLAYER_INIT]: this.onInit.bind(this),
             [PlayerEventKey.PLAYER_MOVE]: this.onPlayerMove.bind(this),
@@ -32,7 +37,6 @@ cc.Class({
         this.moveSpeed = playerData.moveSpeed;
 
         this.setUpLane(listLane);
-        this.setupFSM();
         this.updateHpBar();
     },
 
@@ -43,7 +47,7 @@ cc.Class({
                 { name: PlayerState.Transition.INITIALIZE, from: PlayerState.State.NULL, to: PlayerState.State.READY },
                 { name: PlayerState.Transition.MOVE, from: [PlayerState.State.SHOOTING], to: PlayerState.State.MOVING },
                 { name: PlayerState.Transition.STOP, from: [PlayerState.State.MOVING, PlayerState.State.SHOOTING], to: PlayerState.State.STOP },
-                { name: PlayerState.Transition.SHOOT, from: [PlayerState.State.STOP, PlayerState.State.READY, PlayerState.State.SHOOTING], to: PlayerState.State.SHOOTING },
+                { name: PlayerState.Transition.SHOOT, from: ['*'], to: PlayerState.State.SHOOTING },
                 { name: PlayerState.Transition.DIE, from: '*', to: PlayerState.State.DEAD },
             ],
             methods: {
@@ -57,7 +61,6 @@ cc.Class({
 
         this.fsm.initialize();
     },
-
 
     setUpLane(listLane) {
         this.listPlayerPos = listLane.map(laneWorldPos => {
@@ -82,13 +85,13 @@ cc.Class({
         }
     },
 
-
     onPlayerMove(direction) {
-        if (!this.fsm.is("shooting")) {
+        if (!this.fsm.can("move")) {
             cc.log(`Cannot move. Current state: ${this.fsm.state}`);
             return;
         }
 
+        this.unschedule(this.shootingSchedule);
         direction === "up" ? this.moveUp() : this.moveDown();
     },
 
@@ -122,30 +125,46 @@ cc.Class({
                 }
                 if (this.fsm.can('shoot')) {
                     this.fsm.shoot();
-                    return;
+                    this.shootingSchedule();
                 }
             })
             .start();
+    },
+
+    startShooting() {
+        if (this.fsm.state !== PlayerState.State.SHOOTING) {
+            cc.log("Cannot shoot in the current state.");
+            return;
+        }
+
+        this.unschedule(this.shootingSchedule);
+        this.shootingSchedule = () => {
+            if (this.fsm.state === PlayerState.State.SHOOTING) {
+                this.bulletController.getComponent('BulletController').spawnBullet(this.getCurrentBulletPosition(), this.damage);
+                this.spine.setAnimation(1, "shoot", false);
+            }
+        };
+
+        this.shootingSchedule();
+        this.schedule(this.shootingSchedule, this.shootSpeed);
+    },
+
+    getCurrentBulletPosition() {
+        return this.bulletPos.convertToWorldSpaceAR(cc.v2(0, 0));
+    },
+
+    stopActions() {
+        this.unschedule(this.shootingSchedule);
+    },
+
+    spawnBullet() {
+        this.bulletController.getComponent('BulletController').spawnBullet(this.getCurrentBulletPosition(), this.damage);
     },
 
     onUltimateActivated() {
         this.bulletController.getComponent('BulletController').spawnUltimateBullet(this.damage);
     },
 
-    startShooting() {
-        this.unschedule(this.spawnBullet);
-        this.schedule(this.spawnBullet, this.shootSpeed);
-    },
-
-    stopActions() {
-        this.unschedule(this.spawnBullet);
-    },
-
-    spawnBullet() {
-        this.spine.setAnimation(1, "shoot", false);
-        const bulletWorldPos = this.bulletPos.convertToWorldSpaceAR(cc.v2(0, 0));
-        this.bulletController.getComponent('BulletController').spawnBullet(bulletWorldPos, this.damage);
-    },
     onIncreaseShootSpeed({ multiplier, duration }) {
         if (!this.fsm.can('shoot')) {
             cc.log("Player cannot shoot in the current state.");
@@ -153,14 +172,17 @@ cc.Class({
         }
         this.shootSpeed /= multiplier;
 
-        this.unschedule(this.spawnBullet);
-
-        this.schedule(this.spawnBullet, this.shootSpeed);
+        this.unschedule(this.shootingSchedule);
+        this.shootingSchedule = () => {
+            this.bulletController.getComponent('BulletController').spawnBullet(this.getCurrentBulletPosition(), this.damage);
+            this.spine.setAnimation(1, "shoot", false);
+        };
+        this.schedule(this.shootingSchedule, this.shootSpeed);
 
         this.scheduleOnce(() => {
             this.shootSpeed = this.originalShootSpeed;
-            this.unschedule(this.spawnBullet);
-            this.schedule(this.spawnBullet, this.shootSpeed);
+            this.unschedule(this.shootingSchedule);
+            this.schedule(this.shootingSchedule, this.shootSpeed);
         }, duration);
     },
 
@@ -182,6 +204,8 @@ cc.Class({
         if (this.hp <= 0) {
             this.fsm.die();
         }
+        const worldPos = this.node.convertToWorldSpaceAR(cc.Vec2.ZERO);
+        Emitter.instance.emit(PlayerEventKey.PLAYER_HURT, worldPos, amount, 1);
     },
 
     heal(amount) {
@@ -197,10 +221,10 @@ cc.Class({
             this.spine.setCompleteListener(() => {
                 this.clear();
                 Emitter.instance.emit(PlayerEventKey.PLAYER_DEAD);
-
             });
         }
     },
+
     clear() {
         this.hp = 0;
         this.damage = 0;
@@ -210,16 +234,15 @@ cc.Class({
         this.listPlayerPos = [];
         this.currentLaneIndex = 0;
         this.targetPos = null;
-        this.fsm = null;
         this.stopActions();
 
         if (this.spine) {
             this.spine.clearTrack(0);
         }
-
     },
 
     onDestroy() {
+        this.fsm = null;
         Emitter.instance.removeEventMap(this.eventMap);
         this.unschedule(this.spawnBullet);
     },
