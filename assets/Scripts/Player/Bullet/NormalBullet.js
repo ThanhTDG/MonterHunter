@@ -10,7 +10,6 @@ cc.Class({
 
     onCollisionEnter(other, self) {
         if (other.node.group === 'monster') {
-            cc.log('hit');
             Emitter.instance.emit(BulletEventKey.REMOVE_BULLET, this.id);
             other.node.getComponent('MonsterItem').takeDamageMonster(this.damage);
             this.onDestroyBullet();

@@ -218,6 +218,7 @@ cc.Class({
                 }
 
                 this.attackPlayer();
+                other.node.getComponent('PlayerController').takeDamage(this.damage);
 
                 this.attackCallback = this.attackPlayer;
                 this.schedule(this.attackCallback, 1.3);
