@@ -6,6 +6,8 @@ export const AudioKey = {
 	[Key.BATTLE_BGM]: ConfigType.MUSIC,
 	[Key.CLICK]: ConfigType.EFFECT,
 	[Key.POPUP_OPEN]: ConfigType.EFFECT,
+	[Key.GAME_START]: ConfigType.EFFECT,
+	[Key.UPGRADE]: ConfigType.EFFECT,
 
 };
 export const AudioPath = {
@@ -13,4 +15,6 @@ export const AudioPath = {
 	[Key.BATTLE_BGM]: "bgm_battle",
 	[Key.CLICK]: "effect_click",
 	[Key.POPUP_OPEN]: "effect_popup",
+	[Key.GAME_START]: "effect_game_start",
+	[Key.UPGRADE]: "effect_upgrade",
 };

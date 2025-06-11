@@ -31,6 +31,15 @@ export class SoundController {
 	static playSound(audioKey, loop = false) {
 		this._instance.playSound(audioKey, loop);
 	}
+	static stopSound(audioKey) {
+		this._instance.stopSound(audioKey);
+	}
+	static pauseSound(audioKey) {
+		this._instance.pauseSound(audioKey);
+	}
+	static pauseAll(type) {
+		this._instance.pauseAll(type);
+	}
 
 	initializeMaps() {
 		Object.values(ConfigType).forEach((type) => {
@@ -162,6 +171,7 @@ export class SoundController {
 		this.configMap[type].applyConfig(config);
 		this.updateVolume(type);
 	}
+	
 
 	calculateVolume(type) {
 		const item = this.getConfig(type);
@@ -173,7 +183,9 @@ export class SoundController {
 	}
 
 	setVolume(id, type) {
-		if (id == null) return;
+		if (id == null) {
+			return;
+		}
 		const volume = this.calculateVolume(type);
 		cc.audioEngine.setVolume(id, volume);
 	}
