@@ -1,24 +1,31 @@
 cc.Class({
-    extends: cc.Component,
+	extends: cc.Component,
 
-    calculate(currentHP, deadCount, remainingCount, isPlayerDead, baseMultiplier = 10) {
-        if (isPlayerDead) {
-            return deadCount * baseMultiplier;
-        }
+	calculate(
+		currentHP,
+		deadCount,
+		remainingCount,
+		isPlayerDead,
+		baseMultiplier = 10
+	) {
+		if (isPlayerDead) {
+			return deadCount * baseMultiplier;
+		}
+		let bonusMultiplier = this.getBonusMultiple(currentHP);
+		const score = deadCount * bonusMultiplier * baseMultiplier;
+		return score;
+	},
 
-        let bonusMultiplier = 1.0;
-
-        if (currentHP === 100) {
-            bonusMultiplier = 1.5;
-        } else if (currentHP > 75) {
-            bonusMultiplier = 1.3;
-        } else if (currentHP > 50) {
-            bonusMultiplier = 1.25;
-        } else {
-            bonusMultiplier = 1.0;
-        }
-
-        const score = (deadCount * bonusMultiplier) * baseMultiplier;
-        return score;
-    }
+	getBonusMultiple(healthPoint) {
+		if (healthPoint === 100) {
+			return 1.5;
+		}
+		if (healthPoint > 75) {
+			return 1.3;
+		}
+		if (healthPoint > 50) {
+			return 1.25;
+		}
+		return 1.0;
+	},
 });
