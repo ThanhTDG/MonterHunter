@@ -14,11 +14,11 @@ cc.Class({
     },
 
     onLoad() {
-        this.setUpEvent();
+        this.registerEvents();
         this.setupFSM();
     },
 
-    setUpEvent() {
+    registerEvents() {
         this.eventMap = {
             [PlayerEventKey.PLAYER_INIT]: this.onInit.bind(this),
             [PlayerEventKey.PLAYER_MOVE]: this.onPlayerMove.bind(this),
