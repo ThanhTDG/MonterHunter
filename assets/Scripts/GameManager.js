@@ -112,6 +112,7 @@ cc.Class({
 		SceneController.instance.destroy();
 		SoundController.instance.destroy();
 		this.popupController.destroy();
+		DataController.instance.destroy();
 		Emitter.instance.destroy();
 	},
 

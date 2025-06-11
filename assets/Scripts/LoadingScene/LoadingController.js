@@ -11,7 +11,7 @@ cc.Class({
 	},
 	onLoad() {
 		this.initialize();
-		this.schedule(this.animateLoadingText, 0.2)
+		this.schedule(this.animateLoadingText, 0.1)
 	},
 	start() {
 		this.emitStartLoading();
@@ -42,7 +42,15 @@ cc.Class({
 	animateLoadingText() {
 		const base = this.text;
 		const step = this.loadingStep % base.length;
-		const newText = base.slice(step, base.length) + base.slice(0, step);
+
+		let newText = "";
+		for (let i = 0; i < base.length; i++) {
+			if (i === step) {
+				newText += `<b><size=45> ${base[i]} </size></b>`;
+			} else {
+				newText += base[i];
+			}
+		}
 		this.loadingText.string = newText;
 		this.loadingStep++;
 	},

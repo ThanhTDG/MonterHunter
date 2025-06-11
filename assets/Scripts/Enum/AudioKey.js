@@ -3,5 +3,6 @@ export const AudioKey = {
     BATTLE_BGM: 'BATTLE_BGM',
     CLICK: 'CLICK',
     POPUP_OPEN: 'POPUP_OPEN',
-
+    GAME_START: 'GAME_START',
+    UPGRADE: 'UPGRADE',
 }

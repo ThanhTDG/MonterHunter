@@ -3,6 +3,8 @@ const PlayerEventKey = require("../Event/EventKeys/PlayerEventKey");
 const BattleEventKey = require("../Event/EventKeys/BattleEventKey");
 const MonsterEventKey = require('MonsterEventKey');
 const mapData = require('mapData');
+const { SoundController } = require("../Sound/SoundController");
+const { AudioKey } = require("../Enum/AudioKey");
 cc.Class({
     extends: cc.Component,
 
@@ -31,17 +33,25 @@ cc.Class({
     start() {
         this.init();
     },
+    onDestroy() {
+        this.clearGame();
+    },
 
     init() {
         this.isGameEnded = false;
-
         const collisionManager = cc.director.getCollisionManager();
         collisionManager.enabled = true;
         collisionManager.enabledDebugDraw = true;
-
+        this.startBackgroundMusic();
         this.listLane = this.laneManager.returnListSpawn();
         this.initPlayerData();
         this.startBattle();
+    },
+    startBackgroundMusic() {
+        SoundController.playSound(AudioKey.BATTLE_BGM, true);
+    },
+    stopBackgroundMusic() {
+        SoundController.stopSound(AudioKey.BATTLE_BGM);
     },
 
     initPlayerData() {
@@ -210,6 +220,7 @@ cc.Class({
     clearGame() {
         this.monsterController.clearAll();
         this.waveController.clear();
+        this.stopBackgroundMusic();
         Emitter.instance.removeEvent(PlayerEventKey.PLAYER_DIED, this._onPlayerDead);
         Emitter.instance.removeEvent(PlayerEventKey.PLAYER_DIED, this._updateProgressBar);
     },
