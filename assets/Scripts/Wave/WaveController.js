@@ -1,5 +1,5 @@
-const MonsterEventKey = require("MonsterEventKey");
-const Emitter = require("Emitter");
+const MonsterEventKey = require('MonsterEventKey');
+const Emitter = require('Emitter');
 cc.Class({
 	extends: cc.Component,
 
@@ -23,14 +23,12 @@ cc.Class({
 	spawnNextWave() {
 		const config = this.waves[this.currentWave];
 		if (!config) {
-			// emit event ở chỗ này để thông báo kết thúc wave
 			if (this.onAllWavesFinished) {
 				this.onAllWavesFinished();
 			}
 			return;
 		}
 
-		const level = this.currentWave + 1;
 		const monsters = config;
 
 		monsters.forEach((monsterData, index) => {
@@ -39,18 +37,19 @@ cc.Class({
 			}, index * 2);
 		});
 
-		this.currentWave++;
-		let newWave = this.currentWave;
+		this.scheduleOnce(() => {
+			this.currentWave++;
+			Emitter.instance.emit(MonsterEventKey.NEW_WAVE, {
+				totalWave: this.totalWave,
+				newWave: this.currentWave,
+			});
 
-		Emitter.instance.emit(MonsterEventKey.NEW_WAVE, {
-			totalWave: this.totalWave,
-			newWave: newWave,
-		});
-		this.scheduleNextWave(monsters.length * 1.5);
+			this.scheduleNextWave(monsters.length * 1);
+		}, monsters.length * 1);
 	},
 
 	clear() {
 		this.unscheduleAllCallbacks();
 		this.currentWave = 0;
-	},
+	}
 });

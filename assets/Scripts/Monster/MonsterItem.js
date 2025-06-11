@@ -79,10 +79,6 @@ cc.Class({
 		let moveDistance = -cc.winSize.width - 600;
 		let moveTime = Math.abs(moveDistance) / this.speed;
 
-		console.log(
-			`Quái cấp ${this.level} di chuyển với tốc độ ${this.speed}, thời gian: ${moveTime}s, hp: ${this.currentHealth}`
-		);
-
 		this.moveTween = cc
 			.tween(this.node)
 			.by(moveTime, { x: moveDistance })
@@ -215,7 +211,7 @@ cc.Class({
 	},
 
 	damagePlayer(playerNode) {
-		let playerController = playerNode.parent.getComponent("PlayerController"); // fix parent
+		let playerController = playerNode.getComponent("PlayerController");
 		if (playerController) {
 			playerController.takeDamage(this.damage);
 		}
