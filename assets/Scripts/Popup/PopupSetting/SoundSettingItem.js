@@ -1,4 +1,3 @@
-const { AudioKey } = require("../../Enum/AudioKey");
 const { SoundConfigType } = require("../../Enum/SoundConfigType");
 const { SoundController } = require("../../Sound/SoundController");
 
@@ -44,5 +43,6 @@ cc.Class({
         this.setSlider(value);
         this.setFillSlider(value);
         this.config.volume = value;
+        SoundController.instance.updateVolume(this.soundType);
     },
 });

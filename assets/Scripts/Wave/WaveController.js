@@ -30,19 +30,14 @@ cc.Class({
         }
 
         const level = this.currentWave + 1;
-        let monsters = [];
+        const monsters = config;
 
-        config.forEach(mon => {
-            for (let i = 0; i < mon.count; i++) {
-                monsters.push({ type: mon.type, level });
-            }
-        });
-
-        monsters.forEach((mons, index) => {
+        monsters.forEach((monsterData, index) => {
             this.scheduleOnce(() => {
-                this.monsterController.spawnMonster(mons);
-            }, index * 1.5);
+                this.monsterController.spawnMonster(monsterData);
+            }, index * 2);
         });
+
         this.currentWave++;
         let newWave = this.currentWave;
 

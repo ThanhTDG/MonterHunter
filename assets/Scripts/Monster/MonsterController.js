@@ -24,8 +24,16 @@ cc.Class({
     spawnMonster(monsterData) {
         const y = this.getRandomLaneY();
         const pos = cc.v2(cc.winSize.width + 150, y);
+
+        if (!monsterData.id) {
+            monsterData.id = this.generateId();
+        }
         const monster = this.monsterFactory.create(monsterData, this.monsterLayer, pos);
         this.monsters[monsterData.id] = monster;
+    },
+
+    generateId() {
+        return 'mon_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
     },
 
     getRandomLaneY() {
@@ -36,16 +44,13 @@ cc.Class({
 
     onDestroyMonster(data) {
         this.remove(data.id);
-        cc.log(`[MonsterController - đi hết màn hình hoặc end gaem] : id= ${data.id}, type= ${data.type}, deadCount= ${this.deadCount}`);
     },
 
     onMonsterDead(data) {
         this.deadCount++;
         this.remove(data.id);
-        cc.log(`[MonsterController - bị kill] die: id= ${data.id}, type= ${data.type}, deadCount= ${this.deadCount}`);
     },
 
-    // tổng quái bị giết
     getDeadCount() {
         return this.deadCount;
     },
@@ -72,9 +77,17 @@ cc.Class({
 
     clearAll() {
         for (let id in this.monsters) {
-            this.monsters[id].destroy();
+            const monster = this.monsters[id];
+            if (monster) {
+                monster.unscheduleAllCallbacks && monster.unscheduleAllCallbacks();
+                monster.stopAllActions && monster.stopAllActions();
+                monster.destroy();
+            }
         }
         this.monsters = {};
-        Emitter.instance.removeEvent(MonsterEventKey.MONSTER_DEAD, this.onMonsterDead, this);
+        this.deadCount = 0;
+
+        Emitter.instance.removeEvent(MonsterEventKey.MONSTER_DEAD, this._onMonsterDead, this);
+        Emitter.instance.removeEvent(MonsterEventKey.MONSTER_END, this._onDestroyMonster, this);
     }
 });

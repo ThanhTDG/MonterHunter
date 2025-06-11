@@ -9,7 +9,6 @@ export class DataController {
     constructor() {
         this.playerPoint = null;
         this.playerRecord = null;
-        this.mapConfigs = null;
         this.selectedMapId = null;
         this.playerStats = null;
     }
@@ -37,7 +36,7 @@ export class DataController {
 
     getHighestMapCanSelect() {
         const recordId = this.playerRecord.getHighestId();
-        const maxId = this.mapConfigs.length;
+        const maxId = MapConfigs.length;
         return Math.min(recordId + 1, maxId);
     }
 
@@ -50,11 +49,12 @@ export class DataController {
     }
 
     getMapConfigs() {
-        return this.mapConfigs;
+        return MapConfigs;
     }
 
     getMapConfig(mapId) {
-        return this.mapConfigs[mapId];
+        const map = MapConfigs.find(map => map.id === mapId);
+        return map;
     }
 
     getSelectedMapId() {
@@ -64,20 +64,19 @@ export class DataController {
         if (!this.selectedMapId) {
             throw new Error("No map selected");
         }
-        return this.mapConfigs.find(map => map.id === this.selectedMapId);
+        return MapConfigs.find(map => map.id === this.selectedMapId);
     }
 
     getSelectedMap() {
         if (!this.selectedMapId) {
             throw new Error("No map selected");
         }
-        return this.mapConfigs.find(map => map.id === this.selectedMapId);
+        return MapConfigs.find(map => map.id === this.selectedMapId);
     }
 
     preLoad(onLoaded, onLoad) {
         this.playerPoint = PlayerPoint.preLoad(onLoaded, onLoad);
         this.playerRecord = PlayerRecord.preLoad(onLoaded, onLoad);
-        this.mapConfigs = MapConfigs;
         this.setPlayerStats(this.playerPoint);
         this.resetSelectedMap();
     }
@@ -94,6 +93,13 @@ export class DataController {
 
     resetSelectedMap() {
         this.selectedMapId = this.getHighestMapCanSelect();
+    }
+    destroy() {
+        this.playerPoint = null;
+        this.playerRecord = null;
+        this.selectedMapId = null;
+        this.playerStats = null;
+        DataController._instance = null;
     }
 
 }
