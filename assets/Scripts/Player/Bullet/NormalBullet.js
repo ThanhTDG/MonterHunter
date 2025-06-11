@@ -1,6 +1,7 @@
 const { EntityGroup } = require("../../Enum/EntityGroup");
 const Emitter = require("../../Event/Emitter");
 const BulletEventKey = require("../../Event/EventKeys/BulletEventKey");
+const {EntityGroup} = require("../../Enum/EntityGroup");
 cc.Class({
     extends: require('BulletItem'),
 
