@@ -14,12 +14,13 @@ cc.Class({
             override: true
         },
         requiredKills: 10,
+        
     },
 
     onLoad() {
         this.currentKills = 0;
         this.isReady = false;
-        Emitter.instance.registerEvent(MonsterEventKey.MONSTER_DIED, this.onMonsterKilled.bind(this));
+        Emitter.instance.registerEvent(MonsterEventKey.MONSTER_DEAD, this.onMonsterKilled.bind(this));
         Skill.prototype.onLoad.call(this);
         this.cooldownLabel.node.active = true;
     },
@@ -28,7 +29,8 @@ cc.Class({
         this.progressBar.progress = 0;
         this.node.opacity = 100;
         this.isCooldown = false;
-        this.cooldownLabel.string = (this.currentKills / this.requiredKills).toFixed(0);
+        this.cooldownLabel.string = (this.currentKills / this.requiredKills).toFixed(2);
+        this.markAsReady();
     },
 
     activateSkill() {
@@ -43,10 +45,8 @@ cc.Class({
 
     onMonsterKilled() {
         if (this.isReady) return;
-        cc.log('called');
         this.currentKills++;
         this.updateProgress();
-
         if (this.currentKills >= this.requiredKills) {
             this.markAsReady();
         }
@@ -54,7 +54,7 @@ cc.Class({
 
     updateProgress() {
         const progress = this.currentKills / this.requiredKills;
-        this.cooldownLabel.node.string = progress.toFixed(2);
+        this.cooldownLabel.string = progress;
         this.progressBar.progress = progress;
     },
 
