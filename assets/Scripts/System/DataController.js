@@ -4,102 +4,117 @@ const { PlayerStats } = require("../Player/PlayerStats");
 const { MapConfigs } = require("./MapConfigs");
 
 export class DataController {
-    static _instance = null;
+	static _instance = null;
 
-    constructor() {
-        this.playerPoint = null;
-        this.playerRecord = null;
-        this.selectedMapId = null;
-        this.playerStats = null;
-    }
+	constructor() {
+		this.playerPoint = null;
+		this.playerRecord = null;
+		this.selectedMapId = null;
+		this.playerStats = null;
+	}
 
-    static get instance() {
-        if (!DataController._instance) {
-            DataController._instance = new DataController();
-        }
-        return DataController._instance;
-    }
-    setRecordMapScore(mapId, score) {
-        if (this.selectedMapId !== mapId) {
-            throw new Error(`Selected map ID does not match the provided map ID: ${mapId}`);
-        }
-        this.playerRecord.setMapRecord(mapId, score);
-    }
-    getPLayerStats() {
-        return this.playerStats.clone();
-    }
+	static get instance() {
+		if (!DataController._instance) {
+			DataController._instance = new DataController();
+		}
+		return DataController._instance;
+	}
+	setRecordMapScore(mapId, score) {
+		if (this.selectedMapId !== mapId) {
+			throw new Error(
+				`Selected map ID does not match the provided map ID: ${mapId}`
+			);
+		}
+		this.playerRecord.setMapRecord(mapId, score);
+	}
+	hasNextMap() {
+		return this.selectedMapId < this.getHighestMapCanSelect();
+	}
+	goToNextMap() {
+		if (!this.hasNextMap()) {
+			cc.error("No next map available");
+			return null;
+		}
+		this.selectedMapId++;
+		return this.selectedMapId;
+	}
+	getRawPlayerStats() {
+		return this.playerStats;
+	}
+	getPlayerStats() {
+		return this.playerStats.clone();
+	}
 
-    setSkillPoint(type, value) {
-        this.playerPoint.setPoint(type, value);
-        this.setPlayerStats(this.playerPoint);
-    }
+	setSkillPoint(type, value) {
+		this.playerPoint.setPoint(type, value);
+		this.setPlayerStats(this.playerPoint);
+	}
 
-    getHighestMapCanSelect() {
-        const recordId = this.playerRecord.getHighestId();
-        const maxId = MapConfigs.length;
-        return Math.min(recordId + 1, maxId);
-    }
+	getHighestMapCanSelect() {
+		const recordId = this.playerRecord.getHighestId();
+		const maxId = MapConfigs.length;
+		return Math.min(recordId + 1, maxId);
+	}
 
-    getMoney() {
-        return this.playerRecord.getMoney();
-    }
+	getMoney() {
+		return this.playerRecord.getMoney();
+	}
 
-    getPlayerPoint() {
-        return this.playerPoint;
-    }
+	getPlayerPoint() {
+		return this.playerPoint;
+	}
 
-    getMapConfigs() {
-        return MapConfigs;
-    }
+	getMapConfigs() {
+		return MapConfigs;
+	}
 
-    getMapConfig(mapId) {
-        const map = MapConfigs.find(map => map.id === mapId);
-        return map;
-    }
+	getMapConfig(mapId) {
+		const map = MapConfigs.find((map) => map.id === mapId);
+		return map;
+	}
 
-    getSelectedMapId() {
-        return this.selectedMapId;
-    }
-    getCurrentMap() {
-        if (!this.selectedMapId) {
-            throw new Error("No map selected");
-        }
-        return MapConfigs.find(map => map.id === this.selectedMapId);
-    }
+	getSelectedMapId() {
+		return this.selectedMapId;
+	}
+	getCurrentMap() {
+		if (!this.selectedMapId) {
+			throw new Error("No map selected");
+		}
+		return MapConfigs.find((map) => map.id === this.selectedMapId);
+	}
 
-    getSelectedMap() {
-        if (!this.selectedMapId) {
-            throw new Error("No map selected");
-        }
-        return MapConfigs.find(map => map.id === this.selectedMapId);
-    }
+	getSelectedMap() {
+		if (!this.selectedMapId) {
+			throw new Error("No map selected");
+		}
+		return MapConfigs.find((map) => map.id === this.selectedMapId);
+	}
 
-    preLoad(onLoaded, onLoad) {
-        this.playerPoint = PlayerPoint.preLoad(onLoaded, onLoad);
-        this.playerRecord = PlayerRecord.preLoad(onLoaded, onLoad);
-        this.setPlayerStats(this.playerPoint);
-        this.resetSelectedMap();
-    }
+	preLoad(onLoaded, onLoad) {
+		this.playerPoint = PlayerPoint.preLoad(onLoaded, onLoad);
+		this.playerRecord = PlayerRecord.preLoad(onLoaded, onLoad);
+		this.setPlayerStats(this.playerPoint);
+		this.resetSelectedMap();
+	}
 
-    setPlayerStats(playerPoint) {
-        let playerStats = PlayerStats.createDefault();
-        playerStats.applyBonusStats(playerPoint.toPlayerBonusStats());
-        this.playerStats = playerStats;
-    }
+	setPlayerStats(playerPoint) {
+		let playerStats = PlayerStats.createDefault();
+		playerStats.applyBonusStats(playerPoint.toPlayerBonusStats());
+		this.playerStats = playerStats;
+	}
 
-    setSelectedMapId(id) {
-        this.selectedMapId = id;
-    }
+	setSelectedMapId(id) {
+		this.selectedMapId = id;
+	}
 
-    resetSelectedMap() {
-        this.selectedMapId = this.getHighestMapCanSelect();
-    }
-    destroy() {
-        this.playerPoint = null;
-        this.playerRecord = null;
-        this.selectedMapId = null;
-        this.playerStats = null;
-        DataController._instance = null;
-    }
-
+	resetSelectedMap() {
+		this.selectedMapId = this.getHighestMapCanSelect();
+	}
+	destroy() {
+		this.playerPoint = null;
+		this.playerRecord = null;
+		this.selectedMapId = null;
+		this.playerStats = null;
+		DataController._instance = null;
+	}
 }

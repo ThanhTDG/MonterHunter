@@ -82,7 +82,7 @@ cc.Class({
 	},
 
 	initPlayerData() {
-		const playerData = DataController.instance.getPLayerStats();
+		const playerData = DataController.instance.getPlayerStats();
 		this.playerController.init(playerData, this.listLane);
 	},
 
@@ -151,6 +151,7 @@ cc.Class({
 	},
 
 	onWaveFinished() {
+		// event có thể dùng cho trường hợp này mà nhỉ ?
 		this.scheduleOnce(() => {
 			if (this.monsterController.areAllMonstersCleared()) {
 				this.declareWin();
@@ -220,15 +221,17 @@ cc.Class({
 	},
 
 	calculateScoreAndShowPopup(isPlayerDead) {
-		const healtPlayer = this.playerController.getCurrentHealth();
+		const healthPoint = this.playerController.getCurrentHealth();
 		const deadCount = this.monsterController.getDeadCount();
+		// Trong controller này không có hàm cũng không có thuộc tính getRemainingCount,
+		// Tại sao không quản lý bằng danh sách ? rồi có thể trừ đi mà nhỉ ?
 		const remainingCount = this.monsterController.getRemainingCount
 			? this.monsterController.getRemainingCount()
 			: 0;
 
 		const playerAlive = !isPlayerDead;
 		const score = this.scoreCal.calculate(
-			healtPlayer,
+			healthPoint,
 			deadCount,
 			remainingCount,
 			playerAlive
@@ -243,24 +246,6 @@ cc.Class({
 
 	onPlayerDead() {
 		this.isPlayerDead = false;
-	},
-
-	calculateScoreAndShowPopup(isPlayerDead) {
-		const healtPlayer = this.playerController.getCurrentHealth();
-		const deadCount = this.monsterController.getDeadCount();
-		const remainingCount = this.monsterController.getRemainingCount
-			? this.monsterController.getRemainingCount()
-			: 0;
-
-		const playerAlive = !isPlayerDead;
-		const score = this.scoreCal.calculate(
-			healtPlayer,
-			deadCount,
-			remainingCount,
-			playerAlive
-		);
-
-		cc.log("[BattleController] Final Score:", score);
 	},
 
 	pauseGame() {
@@ -287,6 +272,8 @@ cc.Class({
 		}
 	},
 	resetGame() {
+		// tại sao lại phải xóa rồi đăng ký lại event ?
+		// có những hàm chỉ init 1 lần duy nhất sao lại gọi cả init() ?
 		cc.director.resume();
 		this.clearCountdown();
 		this.clearGame();
@@ -297,13 +284,8 @@ cc.Class({
 	},
 
 	nextMap() {
-		const nextMap = DataController.instance.getNextMap();
-		if (nextMap) {
-			DataController.instance.setSelectedMap(nextMap);
-			this.resetGame();
-		} else {
-			cc.log("Đã hết map để chơi");
-		}
+		DataController.instance.goToNextMap();
+		this.resetGame();
 	},
 
 	displayMapInfo(selectedMap) {
