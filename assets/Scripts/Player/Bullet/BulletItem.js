@@ -31,7 +31,6 @@ cc.Class({
 
     pauseBattle() {
         this.isPaused = true;
-        console.log("Resume bullet actions", this.node);
         this.node.pauseAllActions();
     },
 

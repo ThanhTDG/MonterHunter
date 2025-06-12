@@ -152,7 +152,7 @@ cc.Class({
 
 		this.currentHealth -= amount;
 		this.healthBar.progress = this.currentHealth / this.maxHealth;
-		
+
 		const worldPos = this.node.convertToWorldSpaceAR(cc.Vec2.ZERO);
 		Emitter.instance.emit(MonsterEventKey.TAKE_DAMAGE, worldPos, amount, 1);
 
@@ -200,7 +200,6 @@ cc.Class({
 
 	handleDeath() {
 		this.stopAttacking();
-		cc.log(`Monster ${this.id} of type ${this.type} at level ${this.level} is dead.`);
 		Emitter.instance.emit(MonsterEventKey.MONSTER_DEAD, {
 			id: this.id,
 			type: this.type,

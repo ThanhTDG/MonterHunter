@@ -84,7 +84,6 @@ cc.Class({
 	},
 
 	getScore() {
-		cc.log("VictoryPopup: getScore()", this);
 		const data = this.getData();
 		if (!data) {
 			cc.error("VictoryPopup: getData() - data is not set");
@@ -157,7 +156,6 @@ cc.Class({
 	},
 
 	animateScore() {
-		console.log("animateScore", this.score, this.totalScore);
 		const tween = getTweenScoreLabel(
 			this.scoreLabel,
 			this.score,

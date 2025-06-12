@@ -34,7 +34,6 @@ cc.Class({
 
     activateSkill() {
         if (this.isCooldown) {
-            cc.log("Skill is on cooldown!");
             return;
         }
 

@@ -38,7 +38,6 @@ cc.Class({
     },
 
     init(playerData, listLane) {
-        cc.log(playerData);
         this.hp = playerData.hp;
         this.maxHp = playerData.hp;
         this.damage = playerData.damage;
@@ -59,8 +58,6 @@ cc.Class({
         }
         this.unschedule(this.shootingSchedule);
         this.spine.timeScale = 0;
-        console.log("Battle paused", this.spine);
-
     },
     onResumeBattle() {
         this.node.resumeAllActions();

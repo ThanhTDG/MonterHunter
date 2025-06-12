@@ -31,7 +31,6 @@ cc.Class({
     pauseBattle() {
         this._isPause = true;
         for (let id in this.monsters) {
-            console.log("Pause monster actions", this.monsters[id]);
             const monster = this.monsters[id];
             monster.getComponent(MonsterItem).pauseBattle();
         }
