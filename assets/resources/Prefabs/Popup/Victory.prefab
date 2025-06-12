@@ -4928,9 +4928,6 @@
     "lobbyButton": {
       "__id__": 114
     },
-    "nextMapButton": {
-      "__id__": 101
-    },
     "stars": [
       {
         "__id__": 47
@@ -4950,6 +4947,9 @@
     },
     "totalScoreLabel": {
       "__id__": 74
+    },
+    "nextMapButton": {
+      "__id__": 101
     },
     "_id": ""
   },

@@ -8,6 +8,8 @@ const { AudioKey } = require("../Enum/AudioKey");
 
 const PopupEventKeys = require("../Event/EventKeys/PopupEventKeys");
 const { PopupType } = require("../Enum/popupType");
+const { SoundConfigType } = require("../Enum/SoundConfigType");
+const { calculateScore } = require("./ScoreCalculator");
 cc.Class({
 	extends: cc.Component,
 
@@ -16,7 +18,6 @@ cc.Class({
 		monsterController: require("MonsterController"),
 		laneManager: require("LaneManager"),
 		playerController: require("PlayerController"),
-		scoreCal: require("ScoreCalculator"),
 		monsterLayer: cc.Node,
 		mapLabel: cc.Node,
 		countDownLabel: cc.Node,
@@ -40,8 +41,7 @@ cc.Class({
 			return;
 		}
 		cc.director.pause();
-		// test pause BMG
-		this.stopBackgroundMusic();
+		SoundController.pauseAll(SoundConfigType.EFFECT);
 		this.countDownLabel.getComponent(cc.Label).string = "PAUSE";
 		this.countDownLabel.active = true;
 	},
@@ -50,8 +50,7 @@ cc.Class({
 			return;
 		}
 		cc.director.resume();
-		// test pause BMG
-		this.startBackgroundMusic();
+		SoundController.resumeAll(SoundConfigType.EFFECT);
 		if (typeof this.countdownTimer === "number" && this.countdownTimer >= 0) {
 			this.countDownLabel.getComponent(cc.Label).string =
 				this.countdownTimer.toString();
@@ -99,13 +98,9 @@ cc.Class({
 		const playerData = DataController.instance.getPlayerStats();
 		this.playerController.init(playerData, this.listLane);
 	},
-	sendInitEvent(playerData) {
-		Emitter.instance.emit(PlayerEventKey.PLAYER_INIT, {
-			playerData,
-			listLane: this.listLane,
-		});
-	},
+
 	startBattle() {
+		this.mapId = DataController.instance.getSelectedMapId();
 		let selectedMap = DataController.instance.getSelectedMap();
 		this.displayMapInfo(selectedMap);
 
@@ -224,7 +219,10 @@ cc.Class({
 			if (this.isGameEnded) return;
 
 			if (this.countdownTimer <= 0) {
-				if (!this.monsterController.areAllMonstersCleared() || this.isPlayerDead) {
+				if (
+					!this.monsterController.areAllMonstersCleared() ||
+					this.isPlayerDead
+				) {
 					this.declareLose();
 					return;
 				}
@@ -251,25 +249,43 @@ cc.Class({
 	calculateScoreAndShowPopup(isPlayerDead) {
 		const healthPoint = this.playerController.getCurrentHealth();
 		const deadCount = this.monsterController.getDeadCount();
-		const remainingCount = this.monsterController.getRemainingCount ? this.monsterController.getRemainingCount() : 0;
+		const remainingCount = this.monsterController.getRemainingCount
+			? this.monsterController.getRemainingCount()
+			: 0;
 		const playerAlive = !isPlayerDead;
 
-		const scoreData = {
-			healthPoint,
+		this.onEndBattle(healthPoint, deadCount, remainingCount, playerAlive);
+	},
+	getMaxPlayerHealth() {
+		return DataController.instance.getPlayerStats().hp;
+	},
+
+	onEndBattle(healthPoint, deadCount, remainingCount, isVictory) {
+		const healthRatio = healthPoint / this.getMaxPlayerHealth();
+		const totalMonsters = deadCount + remainingCount;
+		const score = calculateScore(isVictory, {
 			deadCount,
-			remainingCount,
-			isPlayerDead,
-		};
-
-		const score = this.scoreCal.calculate(scoreData);
-
-		cc.log("[BattleController] Final Score:", score);
-
-		Emitter.instance.emit(PopupEventKeys.SHOW_POPUP, {
-			score,
-			playerAlive,
-			deadCount,
+			healthRatio,
 		});
+		const totalScore = calculateScore(true, {
+			deadCount: totalMonsters,
+			healthRatio: 1,
+		});
+		const mapId = this.mapId;
+		DataController.instance.setPlayerRecord(mapId, score, isVictory);
+
+		if (isVictory) {
+			const hasNextMap = DataController.instance.hasNextMap();
+			Emitter.instance.emit(PopupEventKeys.SHOW_POPUP, PopupType.VICTORY, {
+				score,
+				totalScore,
+				hasNextMap,
+			});
+		} else {
+			throw new Error(
+				"not implemented yet, need to create a popup for lose state"
+			);
+		}
 	},
 
 	declareWin() {
@@ -317,13 +333,9 @@ cc.Class({
 
 	clearGame() {
 		this.unscheduleAllCallbacks();
-
-		if (this.monsterController && this.monsterController.clearAll)
-			this.monsterController.clearAll();
-		if (this.waveController && this.waveController.clear)
-			this.waveController.clear();
-		if (this.playerController && this.playerController.clear)
-			this.playerController.clear();
-		SoundController.stopAllSound && SoundController.stopAllSound();
+		this.monsterController.clearAll();
+		this.waveController.clear();
+		this.playerController.clear();
+		SoundController.stopAllSound();
 	},
 });

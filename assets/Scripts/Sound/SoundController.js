@@ -40,6 +40,12 @@ export class SoundController {
 	static pauseAll(type) {
 		this._instance.pauseAll(type);
 	}
+	static resumeAll(type) {
+		this._instance.resumeAll(type);
+	}
+	static stopAllSound() {
+		this._instance.stopAllSound();
+	}
 
 	initializeMaps() {
 		Object.values(ConfigType).forEach((type) => {
@@ -87,11 +93,11 @@ export class SoundController {
 	}
 
 	removePlayingItem(id) {
-		this.playing = this.playing.filter(item => item.id !== id);
+		this.playing = this.playing.filter((item) => item.id !== id);
 	}
 
 	getPlayingItemByKey(key) {
-		return this.playing.find(item => item.key === key);
+		return this.playing.find((item) => item.key === key);
 	}
 
 	stopSound(audioKey) {
@@ -115,7 +121,7 @@ export class SoundController {
 	}
 
 	pauseAll(type) {
-		this.playing.forEach(item => {
+		this.playing.forEach((item) => {
 			if (item.type === type || type === ConfigType.MASTER) {
 				cc.audioEngine.pause(item.id);
 			}
@@ -123,7 +129,7 @@ export class SoundController {
 	}
 
 	resumeAll(type) {
-		this.playing.forEach(item => {
+		this.playing.forEach((item) => {
 			if (item.type === type || type === ConfigType.MASTER) {
 				cc.audioEngine.resume(item.id);
 			}
@@ -131,7 +137,7 @@ export class SoundController {
 	}
 
 	updateVolume(type) {
-		this.playing.forEach(item => {
+		this.playing.forEach((item) => {
 			if (item.type === type || type === ConfigType.MASTER) {
 				this.setVolume(item.id, item.type);
 			}
@@ -171,7 +177,6 @@ export class SoundController {
 		this.configMap[type].applyConfig(config);
 		this.updateVolume(type);
 	}
-	
 
 	calculateVolume(type) {
 		const item = this.getConfig(type);
