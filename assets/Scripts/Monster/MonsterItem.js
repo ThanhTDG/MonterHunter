@@ -222,8 +222,14 @@ cc.Class({
 			if (!this._hitByBullet || this._hitByBullet !== other.node.id) {
 				this._hitByBullet = other.node.id;
 				this.handleHitByBullet();
+
 			}
+			const damage = other.node.getComponent('BulletItem').damage || 0;
+			const worldPos = this.node.convertToWorldSpaceAR(cc.Vec2.ZERO);
+
+			Emitter.instance.emit(MonsterEventKey.TAKE_DAMAGE, worldPos, damage, 1);
 		}
+
 
 		if (other.node.group === EntityGroup.PLAYER) {
 			if (!this.canAttack) {
