@@ -19,7 +19,7 @@ export class PlayerStats {
         if (bonusStats && bonusStats instanceof PlayerStats) {
             this.hp += bonusStats.hp;
             this.damage += bonusStats.damage;
-            this.shootSpeed += bonusStats.shootSpeed;
+            this.shootSpeed = Math.max(0.01, this.shootSpeed - (0.01 * bonusStats.shootSpeed)).toFixed(3);
             this.moveSpeed += bonusStats.moveSpeed;
         }
     }

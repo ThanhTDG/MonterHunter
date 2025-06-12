@@ -46,7 +46,8 @@ export class PlayerPoint {
     toPlayerBonusStats() {
         const hp = this.hp * PlayerBonusStats[PlayerPointType.HP];
         const damage = this.damage * PlayerBonusStats[PlayerPointType.DAMAGE];
-        const shootSpeed = this.shootSpeed * PlayerBonusStats[PlayerPointType.MOVE_SPEED];
+        const shootSpeed = this.shootSpeed * PlayerBonusStats[PlayerPointType.SHOOT_SPEED];
+        cc.log(shootSpeed);
         const moveSpeed = this.moveSpeed * PlayerBonusStats[PlayerPointType.MOVE_SPEED];
         return new PlayerStats({ hp, damage, shootSpeed, moveSpeed });
 
@@ -69,6 +70,7 @@ export class PlayerPoint {
             default:
                 console.warn(`Unknown point type: ${type}`);
         }
+        this.setLocalStorage()
     }
 
     getPoint(type) {
@@ -97,20 +99,21 @@ export class PlayerPoint {
     toJSON() {
         return {
             hp: this.hp,
+            damage: this.damage,
             shootSpeed: this.shootSpeed,
             moveSpeed: this.moveSpeed
         };
     }
 
     static fromJSON(json) {
-        return new PlayerPoint(json.hp, json.shootSpeed, json.moveSpeed);
+        return new PlayerPoint(json.hp, json.damage, json.shootSpeed, json.moveSpeed);
     }
 
     clone() {
-        return new PlayerPoint(this.hp, this.shootSpeed, this.moveSpeed);
+        return new PlayerPoint(this.hp, this.damage, this.shootSpeed, this.moveSpeed);
     }
 
     total() {
-        return this.hp + this.shootSpeed + this.moveSpeed;
+        return this.hp + this.damage + this.shootSpeed + this.moveSpeed;
     }
 }
