@@ -152,6 +152,9 @@ cc.Class({
 
 		this.currentHealth -= amount;
 		this.healthBar.progress = this.currentHealth / this.maxHealth;
+		
+		const worldPos = this.node.convertToWorldSpaceAR(cc.Vec2.ZERO);
+		Emitter.instance.emit(MonsterEventKey.TAKE_DAMAGE, worldPos, amount, 1);
 
 		if (this.currentHealth <= 0) {
 			if (this.fsm.can(MonsterState.Transition.DIE)) {
@@ -251,6 +254,7 @@ cc.Class({
 			if (!this._hitByBullet || this._hitByBullet !== other.node.id) {
 				this._hitByBullet = other.node.id;
 				this.handleHitByBullet();
+
 			}
 
 			const damage = other.node.getComponent('BulletItem').damage || 0;
@@ -261,6 +265,7 @@ cc.Class({
 				worldPos: worldPos,
 			});
 		}
+
 
 		if (other.node.group === EntityGroup.PLAYER) {
 			if (!this.canAttack) {
