@@ -193,6 +193,7 @@ cc.Class({
         this.shootingSchedule = () => {
             this.bulletController.spawnBullet(this.getCurrentBulletPosition(), this.damage);
             this.spine.setAnimation(1, "shoot", false);
+            SoundController.playSound(AudioKey.PLAYER_SHOOT);
         };
         this.schedule(this.shootingSchedule, this.shootSpeed);
 
@@ -227,7 +228,8 @@ cc.Class({
 
         }
         const worldPos = this.node.convertToWorldSpaceAR(cc.Vec2.ZERO);
-        Emitter.instance.emit(PlayerEventKey.PLAYER_HURT, worldPos, amount, 1);
+        Emitter.instance.emit(PlayerEventKey.PLAYER_HURT, worldPos, amount, 2);
+        cc.log(worldPos);
     },
 
     MonsterPass() {

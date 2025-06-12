@@ -17,15 +17,16 @@ cc.Class({
     },
 
     onLoad() {
-        this.currentKills = 0;
-        this.isReady = false;
-        Emitter.instance.registerEvent(MonsterEventKey.MONSTER_DEAD, this.onMonsterKilled.bind(this));
-        Skill.prototype.onLoad.call(this);
 
-        this.cooldownLabel.node.active = true;
+        Emitter.instance.registerEvent(MonsterEventKey.MONSTER_DEAD, this.onMonsterKilled.bind(this));
+        this._super();
+
     },
 
     initializeSkill() {
+        this._super();
+                this.currentKills = 0;
+        this.isReady = false;
         if (!this.progressBar || !this.cooldownLabel) {
             return;
         }
@@ -33,6 +34,7 @@ cc.Class({
         this.progressBar.progress = 0;
         this.node.opacity = 100;
         this.isCooldown = false;
+        this.cooldownLabel.node.active = true;
         this.cooldownLabel.string = ((this.currentKills / this.requiredKills)*10).toFixed(0);
         this.markAsReady(true);
     },
