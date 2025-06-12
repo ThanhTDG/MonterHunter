@@ -65,6 +65,10 @@ cc.Class({
         return this.deadCount;
     },
 
+    forceUpdateDeadCount() {
+        this.deadCount = this.getDeadCount();
+    },
+
     isMonsterCleared(monster) {
         const isDestroyed = !cc.isValid(monster);
         const isDetached = monster && !monster.parent;
