@@ -4,8 +4,8 @@ const { SCENE_TRANSITIONS } = require("../Enum/Scene");
 const Emitter = require("../Event/Emitter");
 const { SHOW_POPUP } = require("../Event/EventKeys/PopupEventKeys");
 const { SoundController } = require("../Sound/SoundController");
+const { DataController } = require("../System/DataController");
 const { SceneController } = require("../System/SceneController");
-const { DataController } = require("DataController");
 
 cc.Class({
     extends: cc.Component,
