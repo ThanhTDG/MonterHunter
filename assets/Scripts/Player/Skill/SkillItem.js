@@ -31,6 +31,7 @@ cc.Class({
         this.button.node.on('click', this.activateSkill, this);
     },
 
+
     activateSkill() {
         if (this.isCooldown) {
             cc.log("Skill is on cooldown!");
@@ -84,5 +85,24 @@ cc.Class({
     },
 
     onCooldownComplete() {
+    },
+
+    pauseBattle() {
+        this.isPaused = true;
+        this.node.pauseAllActions && this.node.pauseAllActions();
+        if (this.isCooldown) {
+            this.unschedule(this.updateCooldown);
+            this._pausedRemainingTime = this.remainingTime;
+        }
+    },
+
+    resumeBattle() {
+        this.isPaused = false;
+        this.node.resumeAllActions && this.node.resumeAllActions();
+        if (this.isCooldown && this._pausedRemainingTime > 0) {
+            this.remainingTime = this._pausedRemainingTime;
+            this.schedule(this.updateCooldown, 0.1);
+            this._pausedRemainingTime = null;
+        }
     },
 });

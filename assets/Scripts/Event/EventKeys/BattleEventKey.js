@@ -1,2 +1,4 @@
 export const RETRY_BATTLE = "RETRY_BATTLE";
 export const NEXT_BATTLE = "NEXT_BATTLE";
+export const PAUSE_BATTLE = "PAUSE_BATTLE";
+export const RESUME_BATTLE = "RESUME_BATTLE";

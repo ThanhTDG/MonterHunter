@@ -25,8 +25,8 @@ cc.Class({
 		this.eventMap = {
 			[PopupEventKeys.SHOW_POPUP]: this.showPopup.bind(this),
 			[PopupEventKeys.FORCE_HIDE_POPUP]: this.hidePopup.bind(this),
-			[PopupEventKeys.HIDE_SETTING_POPUP]: () => {
-				this.hideTopPopup(PopupType.SETTING);
+			[PopupEventKeys.HIDE_PAUSE_BATTLE_POPUP]: () => {
+				this.hideTopPopup(PopupType.PAUSE_BATTLE);
 			},
 			[PopupEventKeys.HIDE_POPUP]: this.hideTopPopup.bind(this),
 			[PopupEventKeys.HIDE_ALL_POPUPS]: this.hideAllPopups.bind(this),

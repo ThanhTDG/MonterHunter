@@ -3,7 +3,7 @@ const Emitter = require("../../Event/Emitter");
 const { NEXT_BATTLE } = require("../../Event/EventKeys/BattleEventKey");
 
 cc.Class({
-	extends: require("EndBattlePopup"),
+	extends: require("./EndBattle"),
 	properties: {
 		popupType: {
 			default: PopupType.VICTORY,
@@ -11,28 +11,24 @@ cc.Class({
 			type: cc.Enum(PopupType),
 		},
 		nextMapButton: cc.Button,
+		overlayNextMapButton: cc.Button,
 	},
 
 	show() {
-		this.showNextMap();
 		this._super();
+		this.showNextMap();
 	},
 	showNextMap() {
 		const { hasNextMap } = this.getData();
-		this.hasNextMap = hasNextMap;
-		this.nextMapButton.node.active = this.hasNextMap;
+		this.overlayNextMapButton.node.active = !hasNextMap;
 	},
 	registerEvents() {
 		this._super();
-		if (this.hasNextMap) {
-			this.nextMapButton.node.on("click", this.handleNextMap, this);
-		}
+		this.nextMapButton.node.on("click", this.handleNextMap, this);
 	},
 	removeEvents() {
 		this._super();
-		if (this.hasNextMap) {
-			this.nextMapButton.node.off("click", this.handleNextMap, this);
-		}
+		this.nextMapButton.node.off("click", this.handleNextMap, this);
 	},
 
 	handleNextMap() {

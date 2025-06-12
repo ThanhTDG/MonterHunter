@@ -1,3 +1,7 @@
+const { SCENE_TRANSITIONS } = require("../../Enum/Scene");
+const Emitter = require("../../Event/Emitter");
+const { RETRY_BATTLE } = require("../../Event/EventKeys/BattleEventKey");
+const { SceneController } = require("../../System/SceneController");
 const {
 	getTweenScoreLabel,
 	getTweenGoldLabel,
@@ -11,11 +15,11 @@ const STAR_COLOR = cc.color(255, 255, 255);
 const COLORS_STEP = [
 	cc.color(128, 128, 128),
 	cc.color(192, 192, 192),
-	cc.color(205, 127, 50),
+	cc.color(255, 191, 78),
 ];
 
 cc.Class({
-	extends: require("BattlePopupItem"),
+	extends: require("PopupItem"),
 	properties: {
 		stars: {
 			default: [],
@@ -24,6 +28,8 @@ cc.Class({
 		goldLabel: cc.Label,
 		scoreLabel: cc.Label,
 		totalScoreLabel: cc.Label,
+		retryButton: cc.Button,
+		lobbyButton: cc.Button,
 	},
 
 	onLoad() {
@@ -45,6 +51,23 @@ cc.Class({
 		this.displayStars();
 		this.animateScore();
 		this.animateGold();
+	},
+	registerEvents() {
+		this.retryButton.node.on("click", this.handleRetry, this);
+		this.lobbyButton.node.on("click", this.handleLobby, this);
+	},
+	removeEvents() {
+		this.retryButton.node.off("click", this.handleRetry, this);
+		this.lobbyButton.node.off("click", this.handleLobby, this);
+	},
+	handleRetry() {
+		this.emitHide();
+		Emitter.instance.emit(RETRY_BATTLE);
+	},
+	handleLobby() {
+		this.emitHide();
+		const lobbyTransition = SCENE_TRANSITIONS.TO_LOBBY;
+		SceneController.toScene(lobbyTransition)
 	},
 	hide() {
 		this._super();
@@ -162,6 +185,7 @@ cc.Class({
 				.start();
 		});
 	},
+
 
 	animateStarBright(node) {
 		return this.animateStar(node, STAR_COLOR, getTweenScaleAndSpin);

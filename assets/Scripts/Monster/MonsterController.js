@@ -1,6 +1,8 @@
 const MonsterEventKey = require('MonsterEventKey');
 const Emitter = require('Emitter');
-
+const { PAUSE_BATTLE, RESUME_BATTLE } = require('../Event/EventKeys/BattleEventKey');
+const MonsterItem = require('MonsterItem');
+const { getRandomId } = require('../Utils/RamdomUltis');
 cc.Class({
     extends: cc.Component,
 
@@ -13,18 +15,37 @@ cc.Class({
         this.lanePosList = lanePosList;
         this.monsters = {};
         this.deadCount = 0;
-
         this.registerEvents();
+        this._isPause = false;
     },
 
     registerEvents() {
         this.eventMap = {
             [MonsterEventKey.MONSTER_DEAD]: this.onMonsterDead.bind(this),
             [MonsterEventKey.MONSTER_END]: this.onDestroyMonster.bind(this),
+            [PAUSE_BATTLE]: this.pauseBattle.bind(this),
+            [RESUME_BATTLE]: this.resumeBattle.bind(this),
         };
         Emitter.instance.registerEventMap(this.eventMap);
     },
+    pauseBattle() {
+        this._isPause = true;
+        for (let id in this.monsters) {
+            console.log("Pause monster actions", this.monsters[id]);
+            const monster = this.monsters[id];
+            monster.getComponent(MonsterItem).pauseBattle();
+        }
+        this.node.pauseAllActions();
+    },
 
+    resumeBattle() {
+        this._isPause = false;
+        for (let id in this.monsters) {
+            const monster = this.monsters[id];
+            monster.getComponent(MonsterItem).resumeBattle();
+        }
+        this.node.resumeAllActions();
+    },
     removeEvents() {
         Emitter.instance.removeEventMap(this.eventMap);
     },
@@ -32,23 +53,14 @@ cc.Class({
     spawnMonster(monsterData) {
         const y = this.getRandomLaneY();
         const pos = cc.v2(cc.winSize.width + 150, y);
-
-        if (!monsterData.id) {
-            monsterData.id = this.generateId();
-        }
+        monsterData.id = getRandomId();
         const monster = this.monsterFactory.create(monsterData, this.monsterLayer, pos);
-
+        monster.getComponent(MonsterItem)._isPaused = this._isPause;
         this.monsters[monsterData.id] = monster;
-    },
-
-    generateId() {
-        const random = Math.floor(Math.random() * 1000);
-        return `mon_${Date.now()}_${random}`;
     },
 
     getRandomLaneY() {
         const index = Math.floor(Math.random() * this.lanePosList.length);
-
         return this.lanePosList[index].y;
     },
 

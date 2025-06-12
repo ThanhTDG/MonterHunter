@@ -96,7 +96,7 @@ cc.Class({
 	emitLoadingComplete() {
 		const loadedCallback = () => {
 			const transition = SCENE_TRANSITIONS.TO_LOBBY;
-			SceneController.instance.toTransition(transition);
+			SceneController.toScene(transition);
 		};
 		Emitter.instance.emit(loadingEventsKeys.LOADING_COMPLETE, loadedCallback);
 	},

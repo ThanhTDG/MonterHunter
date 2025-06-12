@@ -1,3 +1,4 @@
+
 export const MapConfigs = [
     {
         id: 1,

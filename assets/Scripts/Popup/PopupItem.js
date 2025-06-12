@@ -27,8 +27,8 @@ cc.Class({
 		this.node.active = false;
 		this.removeEvents();
 	},
-	registerEvents() {},
-	removeEvents() {},
+	registerEvents() { },
+	removeEvents() { },
 	isShowing() {
 		return this.node.active;
 	},
