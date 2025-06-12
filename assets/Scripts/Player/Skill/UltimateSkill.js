@@ -25,7 +25,7 @@ cc.Class({
 
     initializeSkill() {
         this._super();
-                this.currentKills = 0;
+        this.currentKills = 0;
         this.isReady = false;
         if (!this.progressBar || !this.cooldownLabel) {
             return;
@@ -35,7 +35,7 @@ cc.Class({
         this.node.opacity = 100;
         this.isCooldown = false;
         this.cooldownLabel.node.active = true;
-        this.cooldownLabel.string = ((this.currentKills / this.requiredKills)*10).toFixed(0);
+        this.cooldownLabel.string = ((this.currentKills / this.requiredKills) * 10).toFixed(0);
         this.markAsReady(true);
     },
 
