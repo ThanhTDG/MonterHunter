@@ -335,7 +335,7 @@ cc.Class({
 		this.unscheduleAllCallbacks();
 		this.monsterController.clearAll();
 		this.waveController.clear();
-		this.playerController.clear();
+		this.playerController.resetPlayer();
 		SoundController.stopAllSound();
 	},
 });
