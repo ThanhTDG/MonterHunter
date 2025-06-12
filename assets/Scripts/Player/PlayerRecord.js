@@ -63,6 +63,11 @@ export class PlayerRecord {
 		this.money += amount;
 	}
 
+	setMonney(amount){
+		this.money = amount;
+		this.setLocalStorage();
+	}
+
 	getMoney() {
 		return this.money;
 	}
