@@ -3,9 +3,9 @@ const Emitter = require("../Event/Emitter");
 const { SceneName } = require("../Enum/Scene");
 const StateController = require("javascript-state-machine");
 const STATE = {
-	LOADING: "loading",
-	LOBBY: "lobby",
-	BATTLE: "battle",
+	LOADING: SceneName.LOADING,
+	LOBBY: SceneName.LOBBY,
+	BATTLE: SceneName.BATTLE,
 };
 const { SCENE_TRANSITIONS: TRANSITIONS } = require("../Enum/Scene");
 
@@ -15,11 +15,16 @@ export class SceneController {
 	constructor() {
 		this.initialize();
 	}
+
 	static get instance() {
 		if (!SceneController._instance) {
 			SceneController._instance = new SceneController();
 		}
 		return SceneController._instance;
+	}
+
+	static toScene(transitionName) {
+		SceneController._instance.stateController[transitionName]();
 	}
 
 	preLoad(onLoaded, onTotal) {
@@ -43,7 +48,7 @@ export class SceneController {
 	}
 
 	initializeState() {
-		this.state = new StateController({
+		this.stateController = new StateController({
 			init: STATE.LOADING,
 			transitions: [
 				{
@@ -58,30 +63,21 @@ export class SceneController {
 				},
 			],
 			methods: {
-				onToBattle: this.onToBattle.bind(this),
-				onToLobby: this.onToLobby.bind(this),
+				onToBattle: this.loadScene.bind(this),
+				onToLobby: this.loadScene.bind(this),
 			},
 		});
 	}
-	toTransition(transitionName) {
-		this.state[transitionName]();
-	}
 
-	onToBattle() {
-		this.loadScene(SceneName.BATTLE);
-	}
-	onToLobby() {
-		this.loadScene(SceneName.LOBBY);
-	}
-	loadScene(sceneName) {
-		cc.director.loadScene(sceneName);
+	loadScene() {
+		cc.director.loadScene(this.stateController.state);
 	}
 
 	destroy() {
 		if (this.eventMap) {
 			Emitter.instance.removeEventMap(this.eventMap);
 		}
-		this.state = null;
+		this.stateController = null;
 		this.eventMap = null;
 		this.targetScene = null;
 		SceneController._instance = null;

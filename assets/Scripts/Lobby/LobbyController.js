@@ -31,7 +31,7 @@ cc.Class({
     onClickPlayGame() {
         SoundController.playSound(AudioKey.GAME_START)
         const battle = SCENE_TRANSITIONS.TO_BATTLE
-        SceneController.instance.toTransition(battle);
+        SceneController.toScene(battle);
     },
 
     onSelectMap() {

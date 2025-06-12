@@ -1,8 +1,8 @@
 const MonsterEventKey = require("MonsterEventKey");
 const Emitter = require("Emitter");
 const StateMachine = require("javascript-state-machine");
-const MonsterState = require("MonsterState");
 const { EntityGroup } = require("../Enum/EntityGroup");
+const MonsterState = require("../Enum/MonsterState");
 
 cc.Class({
 	extends: cc.Component,
@@ -21,7 +21,6 @@ cc.Class({
 		this.canAttack = false;
 		this.attackCallback = null;
 		this.hitOnlyTimer = null;
-
 		this.attackPlayer = this.attackPlayer.bind(this);
 	},
 
@@ -40,6 +39,33 @@ cc.Class({
 				this.fsm[MonsterState.Transition.START_MOVING]();
 			}
 		}, 1.5);
+	},
+	pauseBattle() {
+		if (this.moveTween) {
+			this.moveTween.stop();
+			this.moveTween = null;
+		}
+		if (this.bounceTween) {
+			this.bounceTween.stop();
+			this.bounceTween = null;
+		}
+		this.node.pauseAllActions();
+		this.stopAttacking();
+		this._isPaused = true;
+	},
+
+	resumeBattle() {
+		this.node.resumeAllActions();
+		this._isPaused = false;
+		if (this.fsm && this.fsm.state === MonsterState.State.MOVING) {
+			this.startWalking();
+		}
+		if (!this.bounceTween) {
+			this.bounceTween = cc
+				.tween(this.node)
+				.repeatForever(cc.tween().by(0.3, { y: 5 }).by(0.3, { y: -5 }))
+				.start();
+		}
 	},
 
 	initFSM() {
@@ -76,6 +102,9 @@ cc.Class({
 	},
 
 	startWalking() {
+		if (this._isPaused) {
+			return;
+		}
 		let moveDistance = -cc.winSize.width - 600;
 		let moveTime = Math.abs(moveDistance) / this.speed;
 
@@ -171,7 +200,7 @@ cc.Class({
 
 	handleDeath() {
 		this.stopAttacking();
-
+		cc.log(`Monster ${this.id} of type ${this.type} at level ${this.level} is dead.`);
 		Emitter.instance.emit(MonsterEventKey.MONSTER_DEAD, {
 			id: this.id,
 			type: this.type,
@@ -227,6 +256,14 @@ cc.Class({
 				this.handleHitByBullet();
 
 			}
+
+			const damage = other.node.getComponent('BulletItem').damage || 0;
+			const worldPos = this.node.convertToWorldSpaceAR(this.node.position);
+
+			Emitter.instance.emit(MonsterEventKey.TAKE_DAMAGE, {
+				damage: damage,
+				worldPos: worldPos,
+			});
 		}
 
 
