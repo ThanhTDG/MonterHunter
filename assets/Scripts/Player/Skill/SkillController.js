@@ -1,3 +1,6 @@
+const Emitter = require("../../Event/Emitter");
+const { PAUSE_BATTLE, RESUME_BATTLE } = require("../../Event/EventKeys/BattleEventKey");
+
 cc.Class({
     extends: cc.Component,
 
@@ -12,6 +15,24 @@ cc.Class({
         this.skills = [];
         this.initUltimateSkill();
         this.initSkills(3);
+        this.registerEvents();
+    },
+    onDestroy() {
+        this.removeEvents();
+        this.clearSkills();
+    },
+    registerEvents() {
+        this.eventMap = {
+            [PAUSE_BATTLE]: this.pauseBattle.bind(this),
+            [RESUME_BATTLE]: this.resumeBattle.bind(this),
+        };
+        Emitter.instance.registerEventMap(this.eventMap);
+    },
+    removeEvents() {
+        if (!this.eventMap) {
+            return;
+        }
+        Emitter.instance.removeEventMap(this.eventMap);
     },
 
     initSkills(delayTime = 0) {
@@ -38,6 +59,27 @@ cc.Class({
                 }, delayTime);
             }
         });
+    },
+    pauseBattle() {
+        this.skills.forEach(skill => {
+            const script = skill.node.getComponent("SkillItem");
+            script.pauseBattle();
+        });
+        if (this.ultimateSkill && this.ultimateSkill.node) {
+            const ultimateScript = this.ultimateSkill.node.getComponent("SkillItem");
+            ultimateScript.pauseBattle();
+        }
+    },
+
+    resumeBattle() {
+        this.skills.forEach(skill => {
+            const script = skill.node.getComponent("SkillItem");
+            script.resumeBattle();
+        });
+        if (this.ultimateSkill && this.ultimateSkill.node) {
+            const ultimateScript = this.ultimateSkill.node.getComponent("SkillItem");
+            ultimateScript.resumeBattle();
+        }
     },
 
     initUltimateSkill() {

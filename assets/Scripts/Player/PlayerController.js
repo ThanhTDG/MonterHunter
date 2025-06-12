@@ -2,6 +2,7 @@ const StateMachine = require("javascript-state-machine");
 const Emitter = require("../Event/Emitter");
 const PlayerEventKey = require("../Event/EventKeys/PlayerEventKey");
 const PlayerState = require('PlayerState');
+const { PAUSE_BATTLE, RESUME_BATTLE } = require("../Event/EventKeys/BattleEventKey");
 
 cc.Class({
     extends: cc.Component,
@@ -18,11 +19,14 @@ cc.Class({
         this.setupFSM();
     },
 
+
     registerEvents() {
         this.eventMap = {
             [PlayerEventKey.PLAYER_MOVE]: this.onPlayerMove.bind(this),
             [PlayerEventKey.INCREASE_SHOOT_SPEED]: this.onIncreaseShootSpeed.bind(this),
             [PlayerEventKey.ACTIVATE_ULTIMATE]: this.onUltimateActivated.bind(this),
+            [PAUSE_BATTLE]: this.onPauseBattle.bind(this),
+            [RESUME_BATTLE]: this.onResumeBattle.bind(this),
         };
         Emitter.instance.registerEventMap(this.eventMap);
     },
@@ -41,7 +45,30 @@ cc.Class({
         this.setUpLane(listLane);
         this.updateHpBar();
     },
+    onPauseBattle() {
+        this.node.pauseAllActions();
+        if (this.movingTween) {
+            this.movingTween.stop();
+            this.movingTween = null;
+        }
+        this.unschedule(this.shootingSchedule);
+        this.spine.timeScale = 0;
+        console.log("Battle paused", this.spine);
 
+    },
+    onResumeBattle() {
+        this.node.resumeAllActions();
+
+        if (this.fsm.state === PlayerState.State.MOVING) {
+            this.moveToTarget();
+        } else if (this.fsm.state === PlayerState.State.SHOOTING) {
+            this.startShooting();
+        }
+        this.spine.timeScale = 1;
+        if (this.fsm.state === PlayerState.State.SHOOTING) {
+            this.schedule(this.shootingSchedule, this.shootSpeed);
+        }
+    },
     setupFSM() {
         this.fsm = new StateMachine({
             init: PlayerState.State.NULL,

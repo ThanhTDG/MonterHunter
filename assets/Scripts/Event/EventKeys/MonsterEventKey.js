@@ -8,3 +8,4 @@ export const END_WAVE = "END_WAVE";
 export const ALL_MONSTERS_DEAD = "ALL_MONSTERS_DEAD";
 export const ALL_WAVE_SPAWNED = "ALL_WAVE_SPAWNED";
 export const NEW_WAVE = "NEW_WAVE";
+export const LAST_WAVE_FINISHED = "LAST_WAVE_FINISHED";

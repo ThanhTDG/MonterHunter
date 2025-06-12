@@ -1,8 +1,12 @@
 const MonsterEventKey = require('MonsterEventKey');
-const Emitter = require('Emitter');
+const Emitter = require('../Event/Emitter')
+const { PAUSE_BATTLE, RESUME_BATTLE } = require('../Event/EventKeys/BattleEventKey');
+const { LAST_WAVE_FINISHED } = require('../Event/EventKeys/MonsterEventKey');
 cc.Class({
 	extends: cc.Component,
-
+	onLoad() {
+		this.registerEvents();
+	},
 	init(waveData, monsterController) {
 		this.waves = waveData;
 		this.currentWave = 0;
@@ -11,24 +15,37 @@ cc.Class({
 		this.onAllWavesFinished = null;
 	},
 
-	startWaves(onFinishedCallback) {
-		this.onAllWavesFinished = onFinishedCallback;
-		this.scheduleOnce(() => this.spawnNextWave(), 1.5);
+	registerEvents() {
+		this.eventMap = {
+			[PAUSE_BATTLE]: this.pauseBattle.bind(this),
+			[RESUME_BATTLE]: this.resumeBattle.bind(this),
+		};
+		Emitter.instance.registerEventMap(this.eventMap);
+	},
+	removeEvents() {
+		if (!this.eventMap) {
+			return;
+		}
+		Emitter.instance.removeEventMap(this.eventMap);
+	},
+
+	startWaves() {
+		this.currentWave = 0;
+		this.scheduleNextWave(1.5);
 	},
 
 	scheduleNextWave(delay = 0) {
-		setTimeout(() => this.spawnNextWave(), delay * 1000);
+		this.unschedule(this._nextWaveCallback);
+		this._nextWaveCallback = () => this.spawnNextWave();
+		this.scheduleOnce(this._nextWaveCallback, delay);
 	},
 
 	spawnNextWave() {
 		const config = this.waves[this.currentWave];
 		if (!config) {
-			if (this.onAllWavesFinished) {
-				this.onAllWavesFinished();
-			}
+			Emitter.instance.emit(LAST_WAVE_FINISHED);
 			return;
 		}
-
 		const monsters = config;
 
 		monsters.forEach((monsterData, index) => {
@@ -47,9 +64,26 @@ cc.Class({
 			this.scheduleNextWave(monsters.length * 1);
 		}, monsters.length * 1);
 	},
+	pauseBattle() {
+		this.unscheduleAllCallbacks();
+		this.node.pauseAllActions();
+		this._isPaused = true;
+	},
+	resumeBattle() {
+		this.node.resumeAllActions();
+		this._isPaused = false;
+		if (this.currentWave < this.totalWave) {
+			this.scheduleNextWave(0);
+		}
+	},
+
 
 	clear() {
+		this.removeEvents();
 		this.unscheduleAllCallbacks();
 		this.currentWave = 0;
+	},
+	onDestroy() {
+		this.removeEvents();
 	}
 });

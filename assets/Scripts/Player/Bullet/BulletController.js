@@ -1,4 +1,5 @@
 const Emitter = require("../../Event/Emitter");
+const { PAUSE_BATTLE, RESUME_BATTLE } = require("../../Event/EventKeys/BattleEventKey");
 const BulletEventKey = require("../../Event/EventKeys/BulletEventKey");
 
 cc.Class({
@@ -16,16 +17,32 @@ cc.Class({
 	onLoad() {
 		this.eventMap = {
 			[BulletEventKey.REMOVE_BULLET]: this.removeBulletById.bind(this),
+			[PAUSE_BATTLE]: this.onPauseBattle.bind(this),
+			[RESUME_BATTLE]: this.onResumeBattle.bind(this),
 		};
 		Emitter.instance.registerEventMap(this.eventMap);
 	},
+	onPauseBattle() {
+		this.bullets.forEach(bullet => {
+			bullet.getComponent("BulletItem").pauseBattle();
+		});
+		this.node.pauseAllActions();
+
+	},
+	onResumeBattle() {
+		this.bullets.forEach(bullet => {
+			bullet.getComponent("BulletItem").resumeBattle();
+		});
+		this.node.resumeAllActions();
+
+	},
+
 
 	spawnBullet(position, damage) {
 		let bullet = cc.instantiate(this.bulletPrefab);
 		let localPos = this.node.parent.convertToNodeSpaceAR(position);
 		bullet.setPosition(localPos);
 		this.node.addChild(bullet);
-
 		bullet
 			.getComponent("BulletItem")
 			.init(this.bulletIdCounter, this.bulletSpeed, damage);
@@ -38,7 +55,6 @@ cc.Class({
 		let localPos = this.ultimateSpawnPos.position;
 		ultimate.setPosition(localPos);
 		this.node.addChild(ultimate);
-
 		ultimate
 			.getComponent("BulletItem")
 			.init(this.bulletIdCounter, this.bulletSpeed, baseDamage * 2);

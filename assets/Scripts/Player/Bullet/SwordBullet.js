@@ -25,6 +25,8 @@ cc.Class({
     },
 
     update(dt) {
+        if (this._isPaused) return;
+
         this.node.angle += this.rotationSpeed * dt;
 
         if (!this.staying) {
@@ -43,7 +45,6 @@ cc.Class({
             }
         }
     },
-
     onCollisionEnter(other, self) {
         if (other.node.group !== EntityGroup.MONSTER || this.damageTargets.includes(other.node)) {
             return;
@@ -84,7 +85,24 @@ cc.Class({
             targetNode.getComponent('MonsterItem').takeDamageMonster(this.damage);
         }
     },
+    pauseBattle() {
+        this._super()
+        this._isPaused = true;
+        this.node.pauseAllActions && this.node.pauseAllActions();
+        if (this.staying) {
+            this.unschedule(this.applyDamage);
+        }
+    },
 
+    resumeBattle() {
+        this._super()
+        this._isPaused = false;
+        this.node.resumeAllActions && this.node.resumeAllActions();
+        if (this.staying && this.damageTargets.length > 0) {
+            this.unschedule(this.applyDamage);
+            this.schedule(this.applyDamage, this.damageInterval);
+        }
+    },
     onDestroyBullet() {
         this.unschedule(this.applyDamage);
         this.damageTargets = [];

@@ -29,22 +29,34 @@ export class SoundController {
 	}
 
 	static playSound(audioKey, loop = false) {
-		this._instance.playSound(audioKey, loop);
+		if (SoundController._instance) {
+			SoundController._instance.playSound(audioKey, loop);
+		}
 	}
 	static stopSound(audioKey) {
-		this._instance.stopSound(audioKey);
+		if (SoundController._instance) {
+			SoundController._instance.stopSound(audioKey);
+		}
 	}
 	static pauseSound(audioKey) {
-		this._instance.pauseSound(audioKey);
+		if (SoundController._instance) {
+			SoundController._instance.pauseSound(audioKey);
+		}
 	}
 	static pauseAll(type) {
-		this._instance.pauseAll(type);
+		if (SoundController._instance) {
+			SoundController._instance.pauseAll(type);
+		}
 	}
 	static resumeAll(type) {
-		this._instance.resumeAll(type);
+		if (SoundController._instance) {
+			SoundController._instance.resumeAll(type);
+		}
 	}
 	static stopAllSound() {
-		this._instance.stopAllSound();
+		if (SoundController._instance) {
+			SoundController._instance.stopAllSound();
+		}
 	}
 
 	initializeMaps() {
