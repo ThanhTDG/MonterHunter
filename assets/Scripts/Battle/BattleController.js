@@ -57,7 +57,7 @@ cc.Class({
 		this.isGameEnded = false;
 		this.isPlayerDead = false;
 		this.winDeclared = false;
-
+		console.log("Resetting game...");
 		this.clearCountdown();
 		this.clearGame();
 		this.resetUI();
@@ -152,7 +152,7 @@ cc.Class({
 			[PlayerEventKey.PLAYER_DEAD]: this.onPlayerDead.bind(this),
 			[MonsterEventKey.NEW_WAVE]: this.updateSlider.bind(this),
 			[MonsterEventKey.MONSTER_DEAD]: this.updateScoreLabel.bind(this),
-			[PopupEventKeys.HIDE_SETTING_POPUP]: this.onHidePausePopup.bind(this),
+			[PopupEventKeys.HIDE_PAUSE_BATTLE_POPUP]: this.onHidePausePopup.bind(this),
 			[BattleEventKey.RETRY_BATTLE]: this.resetGame.bind(this),
 			[BattleEventKey.NEXT_BATTLE]: this.nextMap.bind(this),
 			[BattleEventKey.PAUSE_BATTLE]: this.pauseBattle.bind(this),
@@ -342,8 +342,6 @@ cc.Class({
 	declareWin() {
 		if (this.isGameEnded) return;
 		this.isGameEnded = true;
-
-		this.countDownLabel.getComponent(cc.Label).string = "WIN!";
 		this.countDownLabel.active = true;
 		this.unschedule(this.countdownCallback);
 
@@ -355,8 +353,6 @@ cc.Class({
 	declareLose() {
 		if (this.isGameEnded) return;
 		this.isGameEnded = true;
-
-		this.countDownLabel.getComponent(cc.Label).string = "LOSE!";
 		this.countDownLabel.active = true;
 		this.unschedule(this.countdownCallback);
 
@@ -387,6 +383,8 @@ cc.Class({
 		this.monsterController.clearAll();
 		this.waveController.clear();
 		this.playerController.clear();
+		this.bulletController.clearBullet();
+		this.skillController.clearSkills();
 		SoundController.stopAllSound();
 	},
 	onDestroy() {

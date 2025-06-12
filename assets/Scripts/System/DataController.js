@@ -1,4 +1,3 @@
-const { getMapById } = require("../Utils/MapUtils");
 const { PlayerPoint } = require("../Player/PlayerPoint");
 const { PlayerRecord } = require("../Player/PlayerRecord");
 const { PlayerStats } = require("../Player/PlayerStats");
@@ -81,19 +80,27 @@ export class DataController {
 	}
 
 	getMapConfig(mapId) {
-		return getMapById(mapId);
+		const map = MapConfigs.find((map) => map.id === mapId);
+		return map;
 	}
 
 	getSelectedMapId() {
 		return this.selectedMapId;
+	}
+	getCurrentMap() {
+		if (!this.selectedMapId) {
+			throw new Error("No map selected");
+		}
+		return MapConfigs.find((map) => map.id === this.selectedMapId);
 	}
 
 	getSelectedMap() {
 		if (!this.selectedMapId) {
 			throw new Error("No map selected");
 		}
-		return getMapById(this.selectedMapId);
+		return MapConfigs.find((map) => map.id === this.selectedMapId);
 	}
+	getTotalScore(mapId) { }
 
 	preLoad(onLoaded, onLoad) {
 		this.playerPoint = PlayerPoint.preLoad(onLoaded, onLoad);

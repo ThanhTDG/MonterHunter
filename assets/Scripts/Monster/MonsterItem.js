@@ -102,9 +102,6 @@ cc.Class({
 	},
 
 	startWalking() {
-		if (this._isPaused) {
-			return;
-		}
 		let moveDistance = -cc.winSize.width - 600;
 		let moveTime = Math.abs(moveDistance) / this.speed;
 
@@ -197,7 +194,6 @@ cc.Class({
 
 	handleDeath() {
 		this.stopAttacking();
-		cc.log(`Monster ${this.id} of type ${this.type} at level ${this.level} is dead.`);
 		Emitter.instance.emit(MonsterEventKey.MONSTER_DEAD, {
 			id: this.id,
 			type: this.type,
