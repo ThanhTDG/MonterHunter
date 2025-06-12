@@ -10,7 +10,7 @@ export const DefaultPointUpgrade = {
 };
 export const PlayerBonusStats = {
     [PlayerPointType.HP]: 10,
-    [PlayerPointType.DAMAGE]: 1,
+    [PlayerPointType.DAMAGE]: 5,
     [PlayerPointType.SHOOT_SPEED]: 1,
     [PlayerPointType.MOVE_SPEED]: 50,
 };
