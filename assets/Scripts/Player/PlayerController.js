@@ -7,10 +7,12 @@ cc.Class({
     extends: cc.Component,
 
     properties: {
+        bulletController: require("BulletController"),
+        skillControlelr: require("SkillController"),
         spine: sp.Skeleton,
-        bulletController: cc.Node,
         bulletPos: cc.Node,
         playerHp: cc.ProgressBar,
+
     },
 
     onLoad() {
@@ -46,7 +48,7 @@ cc.Class({
         this.fsm = new StateMachine({
             init: PlayerState.State.NULL,
             transitions: [
-                { name: PlayerState.Transition.INITIALIZE, from: PlayerState.State.NULL, to: PlayerState.State.READY },
+                { name: PlayerState.Transition.INITIALIZE, from: "*", to: PlayerState.State.READY },
                 { name: PlayerState.Transition.MOVE, from: [PlayerState.State.SHOOTING], to: PlayerState.State.MOVING },
                 { name: PlayerState.Transition.STOP, from: [PlayerState.State.MOVING, PlayerState.State.SHOOTING], to: PlayerState.State.STOP },
                 {
@@ -152,7 +154,7 @@ cc.Class({
         this.unschedule(this.shootingSchedule);
         this.shootingSchedule = () => {
             if (this.fsm.state === PlayerState.State.SHOOTING) {
-                this.bulletController.getComponent('BulletController').spawnBullet(this.getCurrentBulletPosition(), this.damage);
+                this.bulletController.spawnBullet(this.getCurrentBulletPosition(), this.damage);
                 this.spine.setAnimation(1, "shoot", false);
             }
         };
@@ -170,11 +172,11 @@ cc.Class({
     },
 
     spawnBullet() {
-        this.bulletController.getComponent('BulletController').spawnBullet(this.getCurrentBulletPosition(), this.damage);
+        this.bulletController.spawnBullet(this.getCurrentBulletPosition(), this.damage);
     },
 
     onUltimateActivated() {
-        this.bulletController.getComponent('BulletController').spawnUltimateBullet(this.damage);
+        this.bulletController.spawnUltimateBullet(this.damage);
     },
 
     onIncreaseShootSpeed({ multiplier, duration }) {
@@ -182,7 +184,7 @@ cc.Class({
 
         this.unschedule(this.shootingSchedule);
         this.shootingSchedule = () => {
-            this.bulletController.getComponent('BulletController').spawnBullet(this.getCurrentBulletPosition(), this.damage);
+            this.bulletController.spawnBullet(this.getCurrentBulletPosition(), this.damage);
             this.spine.setAnimation(1, "shoot", false);
         };
         this.schedule(this.shootingSchedule, this.shootSpeed);
@@ -246,6 +248,20 @@ cc.Class({
                     this.spine.setCompleteListener(null);
                 }
             });
+        }
+    },
+
+    resetPlayer() {
+        this.clear();
+        this.bulletController.clearBullet();
+        this.skillControlelr.resetSkill();
+        this.updateHpBar();
+
+        this.fsm.initialize();
+
+
+        if (this.collider) {
+            this.collider.enabled = true;
         }
     },
 

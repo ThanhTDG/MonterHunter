@@ -66,4 +66,28 @@ cc.Class({
             this.ultimateSkill = null;
         }
     },
+    resetSkill() {
+        this.clearSkills();
+
+        this.initUltimateSkill();
+        this.initSkills(3);
+
+        this.skills.forEach(skill => {
+            if (skill.node) {
+                const skillComponent = skill.node.getComponent('SkillItem');
+                skillComponent.initializeSkill();
+            }
+        });
+
+        if (this.ultimateSkill && this.ultimateSkill.node) {
+            const ultimateSkillComponent = this.ultimateSkill.node.getComponent('UltimateSkill');
+            ultimateSkillComponent.initializeSkill();
+        }
+    },
+
+
+    onDestroy() {
+        this.clearSkills();
+        this.unscheduleAllCallbacks();
+    }
 });
