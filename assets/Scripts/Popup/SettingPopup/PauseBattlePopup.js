@@ -12,7 +12,7 @@ cc.Class({
     extends: SettingPopup,
     properties: {
         popupType: {
-            default: PopupType.DEFAULT,
+            default: PopupType.PAUSE_BATTLE,
             override: true,
             type: cc.Enum(PopupType),
         },

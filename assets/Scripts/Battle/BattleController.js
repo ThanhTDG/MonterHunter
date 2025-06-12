@@ -19,6 +19,8 @@ cc.Class({
 		monsterController: require("MonsterController"),
 		laneManager: require("LaneManager"),
 		playerController: require("PlayerController"),
+		bulletController: require("BulletController"),
+		skillController: require("SkillController"),
 		monsterLayer: cc.Node,
 		mapLabel: cc.Node,
 		countDownLabel: cc.Node,
@@ -69,7 +71,17 @@ cc.Class({
 			this.initBattle();
 		}, 0.1);
 	},
-
+	openPausePopup() {
+		Emitter.instance.emit(PopupEventKeys.SHOW_POPUP, PopupType.PAUSE_BATTLE);
+		this.emitPauseBattle();
+	},
+	openTutorialPopup() {
+		Emitter.instance.emit(PopupEventKeys.SHOW_POPUP, PopupType.TUTORIAL);
+		this.emitPauseBattle();
+	},
+	onClosePausePopup() {
+		this.emitResumeBattle();
+	},
 	initGameState() {
 		this.isGameEnded = false;
 		this.isPlayerDead = false;
@@ -158,6 +170,7 @@ cc.Class({
 			[BattleEventKey.PAUSE_BATTLE]: this.pauseBattle.bind(this),
 			[BattleEventKey.RESUME_BATTLE]: this.resumeBattle.bind(this),
 			[MonsterEventKey.LAST_WAVE_FINISHED]: this.onWaveFinished.bind(this),
+			[PopupEventKeys.HIDE_PAUSE_BATTLE_POPUP]: this.onClosePausePopup.bind(this),
 		};
 		Emitter.instance.registerEventMap(this.eventMap);
 	},
@@ -298,9 +311,13 @@ cc.Class({
 		const totalScore = calculateScore(true, { deadCount: totalMonsters, healthRatio: 1 });
 		const recap = { score, totalScore };
 		this.savePlayerRecord(score, isVictory);
+		SoundController.stopAllSound(SoundConfigType.EFFECT);
+		SoundController.stopAllSound(SoundConfigType.MUSIC);
 		if (isVictory) {
+			SoundController.playSound(AudioKey.VICTORY);
 			this.showVictoryPopup(recap);
 		} else {
+			SoundController.playSound(AudioKey.LOSE);
 			this.showFailedPopup(recap);
 		}
 	},
@@ -386,7 +403,9 @@ cc.Class({
 		this.unscheduleAllCallbacks();
 		this.monsterController.clearAll();
 		this.waveController.clear();
-		this.playerController.clear();
+		this.playerController.resetPlayer();
+		this.bulletController.clearBullet();
+		this.skillController.resetSkill();
 		SoundController.stopAllSound();
 	},
 	onDestroy() {

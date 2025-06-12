@@ -6,4 +6,5 @@ export const PopupType = cc.Enum({
 	FAILED: 4,
 	PAUSE_BATTLE: 6,
 	SELECTMAP: 5,
+	TUTORIAL: 7,
 });

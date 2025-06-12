@@ -1,5 +1,6 @@
 const { AudioKey } = require("../../Enum/AudioKey");
 const { PopupType } = require("../../Enum/popupType");
+const { SCENE_TRANSITIONS } = require("../../Enum/Scene");
 const Emitter = require("../../Event/Emitter");
 const { HIDE_POPUP } = require("../../Event/EventKeys/PopupEventKeys");
 const { SoundController } = require("../../Sound/SoundController");
@@ -62,7 +63,8 @@ cc.Class({
 
     onMapSelected(mapData) {
         DataController.instance.setSelectedMapId(mapData.id);
-        cc.log("chua implement")
+        const battle = SCENE_TRANSITIONS.TO_BATTLE;
+        SceneController.toScene(battle);
         this.emitHide();
     }
 });

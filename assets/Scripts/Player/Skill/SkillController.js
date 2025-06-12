@@ -61,6 +61,9 @@ cc.Class({
         });
     },
     pauseBattle() {
+        if (!this.skills || this.skills.length === 0) {
+            return;
+        }
         this.skills.forEach(skill => {
             const script = skill.node.getComponent("SkillItem");
             script.pauseBattle();
@@ -72,6 +75,9 @@ cc.Class({
     },
 
     resumeBattle() {
+        if (!this.skills || this.skills.length === 0) {
+            return;
+        }
         this.skills.forEach(skill => {
             const script = skill.node.getComponent("SkillItem");
             script.resumeBattle();
@@ -111,10 +117,8 @@ cc.Class({
 
     resetSkill() {
         this.clearSkills();
-
         this.initUltimateSkill();
         this.initSkills(3);
-
         this.skills.forEach(skill => {
             if (skill.node) {
                 const skillComponent = skill.node.getComponent('SkillItem');

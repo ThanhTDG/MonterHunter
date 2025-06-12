@@ -256,7 +256,7 @@ cc.Class({
         }
         const worldPos = this.node.convertToWorldSpaceAR(cc.Vec2.ZERO);
         Emitter.instance.emit(PlayerEventKey.PLAYER_HURT, worldPos, amount, 2);
-        cc.log(worldPos);
+        SoundController.playSound(AudioKey.PLAYER_TAKE_DAMAGE)
     },
 
     MonsterPass() {
@@ -306,8 +306,6 @@ cc.Class({
     resetPlayer() {
         this.clear();
         this.updateHpBar();
-        this.bulletController.clearBullet();
-        this.skillControlelr.resetSkill();
         this.fsm.initialize();
         if (this.collider) {
             this.collider.enabled = true;
@@ -325,9 +323,10 @@ cc.Class({
         this.targetPos = null;
         this.stopActions();
         this.collider.enabled = false;
-
         if (this.spine) {
             this.spine.clearTrack(0);
+            this.spine.setToSetupPose();
+            this.spine.setAnimation(0, "idle", true);
         }
     },
 

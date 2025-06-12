@@ -1,4 +1,6 @@
 const { DataController } = require("DataController");
+const { SoundController } = require("../Sound/SoundController");
+const { AudioKey } = require("../Enum/AudioKey");
 
 cc.Class({
     extends: cc.Component,
@@ -99,7 +101,7 @@ cc.Class({
 
         dataController.setSkillPoint(type, playerPoint.getPoint(type) + 1);
         dataController.setMonney(monney - cost);
-
+        SoundController.playSound(AudioKey.UPGRADE);
         this.updateUI();
     },
 
