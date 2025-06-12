@@ -41,7 +41,7 @@ cc.Class({
 		this.centerOnScreen();
 	},
 	showPopup(type, data = null) {
-		if (this.isPopupOpen(type) || openStack.length === 1) {
+		if (this.isPopupOpen(type) || this.openStack.length === 1) {
 			return;
 		}
 		const popup = this.popupMap[type];
