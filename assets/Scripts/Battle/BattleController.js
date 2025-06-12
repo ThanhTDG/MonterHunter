@@ -22,6 +22,7 @@ cc.Class({
 		mapLabel: cc.Node,
 		countDownLabel: cc.Node,
 		waveSlider: cc.Slider,
+		scoreCurrent: cc.Label,
 	},
 	onLoad() {
 		this.resetUI();
@@ -72,6 +73,8 @@ cc.Class({
 		this.resetUI();
 		this.stopBackgroundMusic();
 
+		this.scoreCurrent.string = `Monster killed: 0`;
+
 		this.scheduleOnce(() => {
 			this.startBackgroundMusic();
 			this.initBattle();
@@ -120,6 +123,7 @@ cc.Class({
 		this.isPlayerDead = false;
 
 		this.monsterController.init(this.monsterLayer, lanePos);
+		this.updateScoreLabel();
 		this.waveController.init(this.waveData, this.monsterController);
 		this.waveController.startWaves(() => this.onWaveFinished());
 	},
@@ -128,6 +132,7 @@ cc.Class({
 		this.eventMap = {
 			[PlayerEventKey.PLAYER_DEAD]: this.onPlayerDead.bind(this),
 			[MonsterEventKey.NEW_WAVE]: this.updateSlider.bind(this),
+			[MonsterEventKey.MONSTER_DEAD]: this.updateScoreLabel.bind(this),
 			[PopupEventKeys.HIDE_SETTING_POPUP]: this.resumeGame.bind(this),
 			[BattleEventKey.RETRY_BATTLE]: this.resetGame.bind(this),
 			[BattleEventKey.NEXT_BATTLE]: this.nextMap.bind(this),
@@ -246,9 +251,14 @@ cc.Class({
 		this.isPlayerDead = true;
 		this.declareLose();
 	},
+
+	getKillCount() {
+		return this.monsterController.getDeadCount();
+	},
+
 	calculateScoreAndShowPopup(isPlayerDead) {
 		const healthPoint = this.playerController.getCurrentHealth();
-		const deadCount = this.monsterController.getDeadCount();
+		const deadCount = this.getKillCount();
 		const remainingCount = this.monsterController.getRemainingCount
 			? this.monsterController.getRemainingCount()
 			: 0;
@@ -256,9 +266,12 @@ cc.Class({
 
 		this.onEndBattle(healthPoint, deadCount, remainingCount, playerAlive);
 	},
+
 	getMaxPlayerHealth() {
 		return DataController.instance.getPlayerStats().hp;
 	},
+
+
 
 	onEndBattle(healthPoint, deadCount, remainingCount, isVictory) {
 		const healthRatio = healthPoint / this.getMaxPlayerHealth();
@@ -267,6 +280,7 @@ cc.Class({
 			deadCount,
 			healthRatio,
 		});
+
 		const totalScore = calculateScore(true, {
 			deadCount: totalMonsters,
 			healthRatio: 1,
@@ -286,6 +300,14 @@ cc.Class({
 				"not implemented yet, need to create a popup for lose state"
 			);
 		}
+	},
+
+	updateScoreLabel() {
+		this.scheduleOnce(() => {
+			this.monsterController.forceUpdateDeadCount();
+			let deadCount = this.getKillCount() || 0;
+			this.scoreCurrent.string = `Monster killed: ${deadCount}`;
+		}, 0.05);
 	},
 
 	declareWin() {
