@@ -31,6 +31,12 @@ cc.Class({
         const battle = SCENE_TRANSITIONS.TO_BATTLE
         SceneController.instance.toTransition(battle);
     },
+
+    onSelectMap() {
+        SoundController.playSound(AudioKey.CLICK)
+        Emitter.instance.emit(SHOW_POPUP, PopupType.SELECTMAP)
+    },
+
     playBackgroundMusic() {
         SoundController.playSound(AudioKey.LOBBY_BGM, true);
     },
