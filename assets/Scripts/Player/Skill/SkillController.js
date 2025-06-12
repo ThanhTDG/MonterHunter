@@ -55,17 +55,18 @@ cc.Class({
 
     clearSkills() {
         this.skills.forEach(skill => {
-            if (skill.node) {
+            if (skill.node && cc.isValid(skill.node)) {
                 skill.node.destroy();
             }
         });
         this.skills = [];
 
-        if (this.ultimateSkill && this.ultimateSkill.node) {
+        if (this.ultimateSkill && this.ultimateSkill.node && cc.isValid(this.ultimateSkill.node)) {
             this.ultimateSkill.node.destroy();
-            this.ultimateSkill = null;
         }
+        this.ultimateSkill = null;
     },
+
     resetSkill() {
         this.clearSkills();
 

@@ -270,6 +270,8 @@ cc.Class({
     resetPlayer() {
         this.clear();
         this.updateHpBar();
+        this.bulletController.clearBullet();
+        this.skillControlelr.resetSkill();
         this.fsm.initialize();
         if (this.collider) {
             this.collider.enabled = true;
@@ -286,8 +288,6 @@ cc.Class({
         this.currentLaneIndex = 0;
         this.targetPos = null;
         this.stopActions();
-        this.bulletController.clearBullet();
-        this.skillControlelr.resetSkill();
         this.collider.enabled = false;
 
         if (this.spine) {
