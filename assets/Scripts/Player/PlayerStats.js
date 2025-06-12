@@ -9,7 +9,6 @@ export class PlayerStats {
         return new PlayerStats();
     }
 
-
     setStats(config) {
         this.hp = config.hp;
         this.damage = config.damage;

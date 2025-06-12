@@ -60,8 +60,19 @@ export class DataController {
 		return this.playerRecord.getMoney();
 	}
 
+	setMonney(amount) {
+		return this.playerRecord.setMonney(amount);
+	}
+
 	getPlayerPoint() {
 		return this.playerPoint;
+	}
+
+	canAffordUpgrade(type) {
+		const playerPoint = this.getPlayerPoint();
+		const cost = playerPoint.calculateUpgradeCost(type);
+		const money = this.getMoney();
+		return money >= cost;
 	}
 
 	getMapConfigs() {
@@ -89,7 +100,7 @@ export class DataController {
 		}
 		return MapConfigs.find((map) => map.id === this.selectedMapId);
 	}
-	getTotalScore(mapId) {}
+	getTotalScore(mapId) { }
 
 	preLoad(onLoaded, onLoad) {
 		this.playerPoint = PlayerPoint.preLoad(onLoaded, onLoad);

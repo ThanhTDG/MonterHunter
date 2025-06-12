@@ -3,6 +3,8 @@ const Emitter = require("../Event/Emitter");
 const PlayerEventKey = require("../Event/EventKeys/PlayerEventKey");
 const MonsterEventKey = require("../Event/EventKeys/MonsterEventKey");
 const PlayerState = require('PlayerState');
+const { SoundController } = require("../Sound/SoundController");
+const { AudioKey } = require("../Enum/AudioKey");
 
 cc.Class({
     extends: cc.Component,
@@ -156,6 +158,7 @@ cc.Class({
             if (this.fsm.state === PlayerState.State.SHOOTING) {
                 this.bulletController.spawnBullet(this.getCurrentBulletPosition(), this.damage);
                 this.spine.setAnimation(1, "shoot", false);
+                SoundController.playSound(AudioKey.PLAYER_SHOOT);
             }
         };
 
@@ -177,6 +180,10 @@ cc.Class({
 
     onUltimateActivated() {
         this.bulletController.spawnUltimateBullet(this.damage);
+        SoundController.playSound(AudioKey.SKILL_ULTIMATE, true);
+        this.scheduleOnce(() => {
+            SoundController.stopSound(AudioKey.SKILL_ULTIMATE)
+        }, 5.5)
     },
 
     onIncreaseShootSpeed({ multiplier, duration }) {
