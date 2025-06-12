@@ -19,17 +19,15 @@ export class DataController {
 		}
 		return DataController._instance;
 	}
-	setRecordMapScore(mapId, score) {
-		if (this.selectedMapId !== mapId) {
-			throw new Error(
-				`Selected map ID does not match the provided map ID: ${mapId}`
-			);
-		}
-		this.playerRecord.setMapRecord(mapId, score);
+
+	setPlayerRecord(mapId, score, isWin) {
+		this.playerRecord.setRecord(mapId, score, isWin);
 	}
+
 	hasNextMap() {
 		return this.selectedMapId < this.getHighestMapCanSelect();
 	}
+
 	goToNextMap() {
 		if (!this.hasNextMap()) {
 			cc.error("No next map available");
@@ -38,9 +36,11 @@ export class DataController {
 		this.selectedMapId++;
 		return this.selectedMapId;
 	}
+
 	getRawPlayerStats() {
 		return this.playerStats;
 	}
+
 	getPlayerStats() {
 		return this.playerStats.clone();
 	}
@@ -89,6 +89,7 @@ export class DataController {
 		}
 		return MapConfigs.find((map) => map.id === this.selectedMapId);
 	}
+	getTotalScore(mapId) {}
 
 	preLoad(onLoaded, onLoad) {
 		this.playerPoint = PlayerPoint.preLoad(onLoaded, onLoad);

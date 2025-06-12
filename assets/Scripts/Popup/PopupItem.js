@@ -21,10 +21,14 @@ cc.Class({
 	},
 	show() {
 		this.node.active = true;
+		this.registerEvents();
 	},
 	hide() {
 		this.node.active = false;
+		this.removeEvents();
 	},
+	registerEvents() {},
+	removeEvents() {},
 	isShowing() {
 		return this.node.active;
 	},
@@ -35,5 +39,4 @@ cc.Class({
 		}
 		Emitter.instance.emit(HIDE_POPUP, this.popupType);
 	},
-
 });

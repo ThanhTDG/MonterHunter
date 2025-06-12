@@ -1,25 +1,22 @@
-cc.Class({
-	extends: cc.Component,
+export const calculateScore = (isVictory, scoreData, baseMultiplier = 10) => {
+	const { healthRatio, deadCount } = scoreData;
+	if (!isVictory) {
+		return deadCount * baseMultiplier;
+	}
+	const bonusMultiplier = getBonusMultiple(healthRatio);
+	const score = deadCount * bonusMultiplier * baseMultiplier;
+	return score;
+};
 
-	calculate(scoreData, baseMultiplier = 10) {
-		if (scoreData.isPlayerDead || scoreData.remainingCount > 0) {
-			return scoreData.deadCount * baseMultiplier;
-		}
-		let bonusMultiplier = this.getBonusMultiple(scoreData.healthPoint);
-		const score = scoreData.deadCount * bonusMultiplier * baseMultiplier;
-		return score;
-	},
-
-	getBonusMultiple(healthPoint) {
-		if (healthPoint === 100) {
-			return 1.5;
-		}
-		if (healthPoint > 75) {
-			return 1.3;
-		}
-		if (healthPoint > 50) {
-			return 1.25;
-		}
-		return 1.0;
-	},
-});
+const getBonusMultiple = (healthRatio) => {
+	if (healthRatio === 1) {
+		return 1.5;
+	}
+	if (healthRatio > 0.75) {
+		return 1.3;
+	}
+	if (healthRatio > 0.5) {
+		return 1.25;
+	}
+	return 1.0;
+};
