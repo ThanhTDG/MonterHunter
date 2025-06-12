@@ -1,6 +1,7 @@
 const StateMachine = require("javascript-state-machine");
 const Emitter = require("../Event/Emitter");
 const PlayerEventKey = require("../Event/EventKeys/PlayerEventKey");
+const MonsterEventKey = require("../Event/EventKeys/MonsterEventKey");
 const PlayerState = require('PlayerState');
 
 cc.Class({
@@ -25,6 +26,7 @@ cc.Class({
             [PlayerEventKey.PLAYER_MOVE]: this.onPlayerMove.bind(this),
             [PlayerEventKey.INCREASE_SHOOT_SPEED]: this.onIncreaseShootSpeed.bind(this),
             [PlayerEventKey.ACTIVATE_ULTIMATE]: this.onUltimateActivated.bind(this),
+            [MonsterEventKey.MONSTER_END]: this.MonsterPass.bind(this),
         };
         Emitter.instance.registerEventMap(this.eventMap);
     },
@@ -94,8 +96,7 @@ cc.Class({
     },
 
     onPlayerMove(direction) {
-        if (!this.fsm.can("move")) {
-            cc.log(`Cannot move. Current state: ${this.fsm.state}`);
+        if (!this.fsm.can(PlayerState.Transition.MOVE)) {
             return;
         }
 
@@ -134,10 +135,10 @@ cc.Class({
         this.movingTween = cc.tween(this.node)
             .to(duration, { position: this.targetPos }, { easing: "smooth" })
             .call(() => {
-                if (this.fsm.can('stop')) {
+                if (this.fsm.can(PlayerState.Transition.STOP)) {
                     this.fsm.stop();
                 }
-                if (this.fsm.can('shoot')) {
+                if (this.fsm.can(PlayerState.Transition.SHOOT)) {
                     this.fsm.shoot();
                     this.shootingSchedule();
                 }
@@ -147,7 +148,6 @@ cc.Class({
 
     startShooting() {
         if (this.fsm.state !== PlayerState.State.SHOOTING) {
-            cc.log("Cannot shoot in the current state.");
             return;
         }
 
@@ -209,9 +209,25 @@ cc.Class({
 
     takeDamage(amount) {
         if (this.fsm.state === PlayerState.State.DEAD) {
-            cc.log("Cannot take damage. Player is already dead.");
             return;
         }
+        this.hp = Math.max(0, this.hp - amount);
+        this.updateHpBar();
+
+        if (this.hp <= 0 && this.fsm.state !== PlayerState.State.DEAD) {
+            this.fsm.die();
+            this.collider.enabled = false;
+
+        }
+        const worldPos = this.node.convertToWorldSpaceAR(cc.Vec2.ZERO);
+        Emitter.instance.emit(PlayerEventKey.PLAYER_HURT, worldPos, amount, 1);
+    },
+
+    MonsterPass() {
+        if (this.fsm.state === PlayerState.State.DEAD) {
+            return;
+        }
+        const amount = 20;
         this.hp = Math.max(0, this.hp - amount);
         this.updateHpBar();
 
@@ -253,13 +269,8 @@ cc.Class({
 
     resetPlayer() {
         this.clear();
-        this.bulletController.clearBullet();
-        this.skillControlelr.resetSkill();
         this.updateHpBar();
-
         this.fsm.initialize();
-
-
         if (this.collider) {
             this.collider.enabled = true;
         }
@@ -275,6 +286,8 @@ cc.Class({
         this.currentLaneIndex = 0;
         this.targetPos = null;
         this.stopActions();
+        this.bulletController.clearBullet();
+        this.skillControlelr.resetSkill();
         this.collider.enabled = false;
 
         if (this.spine) {
