@@ -4501,9 +4501,8 @@
       "__id__": 100
     },
     "_enabled": true,
-    "damageTextPrefab": {
-      "__uuid__": "604ff4ae-9b39-4b3b-a29e-ee6b110107e8"
-    },
+    "playerDamageTextPrefab": null,
+    "monsterDamageTextPrefab": null,
     "_id": "5cS0O7Ok5NSbbaVs3BrD2H"
   },
   {

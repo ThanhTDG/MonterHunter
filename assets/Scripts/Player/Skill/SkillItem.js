@@ -1,4 +1,4 @@
-const {SkillType} = require('../../Enum/SkillType');
+const { SkillType } = require('../../Enum/SkillType');
 
 cc.Class({
     extends: cc.Component,
@@ -7,8 +7,8 @@ cc.Class({
         skillType: {
             default: SkillType.ATKSPEEDUP,
             type: cc.Enum(SkillType),
-            
-            
+
+
         },
         cooldownTime: {
             default: 15,
@@ -17,6 +17,10 @@ cc.Class({
     },
 
     onLoad() {
+        this.initializeSkill();
+    },
+
+    initializeSkill() {
         this.progressBar = this.getComponent(cc.ProgressBar);
         this.button = this.getComponent(cc.Button);
 
@@ -25,10 +29,6 @@ cc.Class({
         this.remainingTime = 0;
 
         this.button.node.on('click', this.activateSkill, this);
-        this.initializeSkill();
-    },
-
-    initializeSkill() {
     },
 
     activateSkill() {
@@ -44,7 +44,6 @@ cc.Class({
     },
 
     onSkillActivated() {
-        cc.log("Skill activated!");
     },
 
     startCooldown(cooldownTime = this.cooldownTime) {

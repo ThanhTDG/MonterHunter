@@ -47,7 +47,6 @@ export class PlayerPoint {
         const hp = this.hp * PlayerBonusStats[PlayerPointType.HP];
         const damage = this.damage * PlayerBonusStats[PlayerPointType.DAMAGE];
         const shootSpeed = this.shootSpeed * PlayerBonusStats[PlayerPointType.SHOOT_SPEED];
-        cc.log(shootSpeed);
         const moveSpeed = this.moveSpeed * PlayerBonusStats[PlayerPointType.MOVE_SPEED];
         return new PlayerStats({ hp, damage, shootSpeed, moveSpeed });
 

@@ -13,12 +13,12 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "TextHpEffect",
+    "_name": "PlayerTextHpEffect",
     "_objFlags": 0,
     "_parent": null,
     "_children": [],
     "_active": true,
-    "_level": 3,
+    "_level": 1,
     "_components": [
       {
         "__id__": 2
@@ -117,8 +117,8 @@
     "_enabled": true,
     "_color": {
       "__type__": "cc.Color",
-      "r": 255,
-      "g": 0,
+      "r": 92,
+      "g": 255,
       "b": 0,
       "a": 255
     },
@@ -156,7 +156,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "2fDb+FPXNLQoK+IlBGEvmV",
+    "fileId": "3b2zukyzJNtJXV7rYYm2ox",
     "sync": false
   }
 ]
