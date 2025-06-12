@@ -1,17 +1,22 @@
 const StateMachine = require("javascript-state-machine");
 const Emitter = require("../Event/Emitter");
 const PlayerEventKey = require("../Event/EventKeys/PlayerEventKey");
+const MonsterEventKey = require("../Event/EventKeys/MonsterEventKey");
 const PlayerState = require('PlayerState');
 const { PAUSE_BATTLE, RESUME_BATTLE } = require("../Event/EventKeys/BattleEventKey");
+const { SoundController } = require("../Sound/SoundController");
+const { AudioKey } = require("../Enum/AudioKey");
 
 cc.Class({
     extends: cc.Component,
 
     properties: {
+        bulletController: require("BulletController"),
+        skillControlelr: require("SkillController"),
         spine: sp.Skeleton,
-        bulletController: cc.Node,
         bulletPos: cc.Node,
         playerHp: cc.ProgressBar,
+
     },
 
     onLoad() {
@@ -27,6 +32,7 @@ cc.Class({
             [PlayerEventKey.ACTIVATE_ULTIMATE]: this.onUltimateActivated.bind(this),
             [PAUSE_BATTLE]: this.onPauseBattle.bind(this),
             [RESUME_BATTLE]: this.onResumeBattle.bind(this),
+            [MonsterEventKey.MONSTER_END]: this.MonsterPass.bind(this),
         };
         Emitter.instance.registerEventMap(this.eventMap);
     },
@@ -73,7 +79,7 @@ cc.Class({
         this.fsm = new StateMachine({
             init: PlayerState.State.NULL,
             transitions: [
-                { name: PlayerState.Transition.INITIALIZE, from: PlayerState.State.NULL, to: PlayerState.State.READY },
+                { name: PlayerState.Transition.INITIALIZE, from: "*", to: PlayerState.State.READY },
                 { name: PlayerState.Transition.MOVE, from: [PlayerState.State.SHOOTING], to: PlayerState.State.MOVING },
                 { name: PlayerState.Transition.STOP, from: [PlayerState.State.MOVING, PlayerState.State.SHOOTING], to: PlayerState.State.STOP },
                 {
@@ -119,8 +125,7 @@ cc.Class({
     },
 
     onPlayerMove(direction) {
-        if (!this.fsm.can("move")) {
-            cc.log(`Cannot move. Current state: ${this.fsm.state}`);
+        if (!this.fsm.can(PlayerState.Transition.MOVE)) {
             return;
         }
 
@@ -159,10 +164,10 @@ cc.Class({
         this.movingTween = cc.tween(this.node)
             .to(duration, { position: this.targetPos }, { easing: "smooth" })
             .call(() => {
-                if (this.fsm.can('stop')) {
+                if (this.fsm.can(PlayerState.Transition.STOP)) {
                     this.fsm.stop();
                 }
-                if (this.fsm.can('shoot')) {
+                if (this.fsm.can(PlayerState.Transition.SHOOT)) {
                     this.fsm.shoot();
                     this.shootingSchedule();
                 }
@@ -172,15 +177,15 @@ cc.Class({
 
     startShooting() {
         if (this.fsm.state !== PlayerState.State.SHOOTING) {
-            cc.log("Cannot shoot in the current state.");
             return;
         }
 
         this.unschedule(this.shootingSchedule);
         this.shootingSchedule = () => {
             if (this.fsm.state === PlayerState.State.SHOOTING) {
-                this.bulletController.getComponent('BulletController').spawnBullet(this.getCurrentBulletPosition(), this.damage);
+                this.bulletController.spawnBullet(this.getCurrentBulletPosition(), this.damage);
                 this.spine.setAnimation(1, "shoot", false);
+                SoundController.playSound(AudioKey.PLAYER_SHOOT);
             }
         };
 
@@ -197,11 +202,15 @@ cc.Class({
     },
 
     spawnBullet() {
-        this.bulletController.getComponent('BulletController').spawnBullet(this.getCurrentBulletPosition(), this.damage);
+        this.bulletController.spawnBullet(this.getCurrentBulletPosition(), this.damage);
     },
 
     onUltimateActivated() {
-        this.bulletController.getComponent('BulletController').spawnUltimateBullet(this.damage);
+        this.bulletController.spawnUltimateBullet(this.damage);
+        SoundController.playSound(AudioKey.SKILL_ULTIMATE, true);
+        this.scheduleOnce(() => {
+            SoundController.stopSound(AudioKey.SKILL_ULTIMATE)
+        }, 5.5)
     },
 
     onIncreaseShootSpeed({ multiplier, duration }) {
@@ -209,8 +218,9 @@ cc.Class({
 
         this.unschedule(this.shootingSchedule);
         this.shootingSchedule = () => {
-            this.bulletController.getComponent('BulletController').spawnBullet(this.getCurrentBulletPosition(), this.damage);
+            this.bulletController.spawnBullet(this.getCurrentBulletPosition(), this.damage);
             this.spine.setAnimation(1, "shoot", false);
+            SoundController.playSound(AudioKey.PLAYER_SHOOT);
         };
         this.schedule(this.shootingSchedule, this.shootSpeed);
 
@@ -234,9 +244,26 @@ cc.Class({
 
     takeDamage(amount) {
         if (this.fsm.state === PlayerState.State.DEAD) {
-            cc.log("Cannot take damage. Player is already dead.");
             return;
         }
+        this.hp = Math.max(0, this.hp - amount);
+        this.updateHpBar();
+
+        if (this.hp <= 0 && this.fsm.state !== PlayerState.State.DEAD) {
+            this.fsm.die();
+            this.collider.enabled = false;
+
+        }
+        const worldPos = this.node.convertToWorldSpaceAR(cc.Vec2.ZERO);
+        Emitter.instance.emit(PlayerEventKey.PLAYER_HURT, worldPos, amount, 2);
+        cc.log(worldPos);
+    },
+
+    MonsterPass() {
+        if (this.fsm.state === PlayerState.State.DEAD) {
+            return;
+        }
+        const amount = 20;
         this.hp = Math.max(0, this.hp - amount);
         this.updateHpBar();
 
@@ -273,6 +300,17 @@ cc.Class({
                     this.spine.setCompleteListener(null);
                 }
             });
+        }
+    },
+
+    resetPlayer() {
+        this.clear();
+        this.updateHpBar();
+        this.bulletController.clearBullet();
+        this.skillControlelr.resetSkill();
+        this.fsm.initialize();
+        if (this.collider) {
+            this.collider.enabled = true;
         }
     },
 

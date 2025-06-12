@@ -21,6 +21,18 @@ cc.Class({
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
     },
 
+    init() {
+        if (this.moveUpButton) {
+            this.moveUpButton.node.on('click', this.onMoveUp, this);
+        }
+        if (this.moveDownButton) {
+            this.moveDownButton.node.on('click', this.onMoveDown, this);
+        }
+
+        cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
+        cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
+    },
+
     onDestroy() {
         if (this.moveUpButton) {
             this.moveUpButton.node.off('click', this.onMoveUp, this);

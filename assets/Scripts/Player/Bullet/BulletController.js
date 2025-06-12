@@ -78,13 +78,17 @@ cc.Class({
 
 	clearBullet() {
 		this.bullets.forEach((bullet) => {
-			bullet.destroy();
+			if (bullet && cc.isValid(bullet)) {
+				bullet.destroy();
+			}
 		});
+
 		this.bullets = [];
 		this.bulletIdCounter = 0;
 	},
 
 	onDestroy() {
+		this.clearBullet();
 		Emitter.instance.removeEventMap(this.eventMap);
 	},
 });

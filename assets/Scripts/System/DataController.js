@@ -1,4 +1,4 @@
-const { getMapById } = require("../Utils/mapUtils");
+const { getMapById } = require("../Utils/MapUtils");
 const { PlayerPoint } = require("../Player/PlayerPoint");
 const { PlayerRecord } = require("../Player/PlayerRecord");
 const { PlayerStats } = require("../Player/PlayerStats");
@@ -61,8 +61,19 @@ export class DataController {
 		return this.playerRecord.getMoney();
 	}
 
+	setMonney(amount) {
+		return this.playerRecord.setMonney(amount);
+	}
+
 	getPlayerPoint() {
 		return this.playerPoint;
+	}
+
+	canAffordUpgrade(type) {
+		const playerPoint = this.getPlayerPoint();
+		const cost = playerPoint.calculateUpgradeCost(type);
+		const money = this.getMoney();
+		return money >= cost;
 	}
 
 	getMapConfigs() {
