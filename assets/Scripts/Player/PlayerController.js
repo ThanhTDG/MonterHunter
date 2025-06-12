@@ -323,7 +323,6 @@ cc.Class({
         if (this.spine) {
             this.spine.clearTrack(0);
             this.spine.setToSetupPose();
-            this.spine.setAnimation(0, "idle", true);
         }
     },
 
